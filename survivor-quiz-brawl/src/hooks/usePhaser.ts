@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import Phaser from 'phaser';
 import { createPhaserConfig } from '../game/config';
 import { EventBus, GameEvents } from '../game/utils/EventBus';
@@ -31,17 +31,24 @@ export interface LevelUpData {
   }>;
 }
 
-export function usePhaser(containerId: string) {
+export function usePhaser(containerId: string, options?: { isSolo: boolean; playerName: string }) {
   const gameRef = useRef<Phaser.Game | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [playerState, setPlayerState] = useState<PlayerStateData | null>(null);
   const [levelUpData, setLevelUpData] = useState<LevelUpData | null>(null);
   const [isGameOver, setIsGameOver] = useState(false);
 
+  // Memoize options to prevent unnecessary re-renders
+  const isSolo = options?.isSolo ?? false;
+  const playerName = options?.playerName ?? 'Player';
+
   useEffect(() => {
+    // Prevent multiple game instances
+    if (gameRef.current) return;
+
     // Create game instance
-    const config = createPhaserConfig(containerId);
-    gameRef.current = new Phaser.Game(config);
+    const phaserConfig = createPhaserConfig(containerId);
+    gameRef.current = new Phaser.Game(phaserConfig);
 
     // Setup event listeners
     const handleGameReady = () => {
@@ -76,7 +83,7 @@ export function usePhaser(containerId: string) {
         gameRef.current = null;
       }
     };
-  }, [containerId]);
+  }, [containerId]); // Only depend on containerId, not the entire options object
 
   const selectUpgrade = (type: string, id: string) => {
     EventBus.emit(GameEvents.UPGRADE_SELECTED, { type, id });

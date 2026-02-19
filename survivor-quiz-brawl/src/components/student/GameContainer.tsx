@@ -1,19 +1,24 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePhaser } from '../../hooks/usePhaser';
 import { QuizOverlay } from './QuizOverlay';
 import { UpgradeSelect } from './UpgradeSelect';
 import { GameHUD } from './GameHUD';
 import { MobileControls } from './MobileControls';
 import { useQuizStore } from '../../stores/quizStore';
+import { EventBus, GameEvents } from '../../game/utils/EventBus';
 
 interface GameContainerProps {
   playerName: string;
+  soloConfig?: { topic: string; grade?: number } | null;
+  onExit?: () => void;
   onGameOver?: (data: { score: number; level: number; survivalTime: number }) => void;
 }
 
-export function GameContainer({ playerName, onGameOver }: GameContainerProps) {
+export function GameContainer({ playerName, soloConfig, onExit, onGameOver }: GameContainerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showQuiz, setShowQuiz] = useState(false);
+  const [quizAnsweredCorrectly, setQuizAnsweredCorrectly] = useState<boolean | null>(null);
+  const [filteredUpgrades, setFilteredUpgrades] = useState<any[]>([]);
   const [isMobile, setIsMobile] = useState(false);
 
   const {
@@ -25,9 +30,19 @@ export function GameContainer({ playerName, onGameOver }: GameContainerProps) {
     pauseGame,
     resumeGame,
     sendJoystickInput,
-  } = usePhaser('game-container');
+  } = usePhaser('game-container', {
+    isSolo: !!soloConfig,
+    playerName
+  });
 
-  const { getCurrentQuiz, submitAnswer, nextQuiz } = useQuizStore();
+  const { generateSoloQuizSet, getCurrentQuiz, submitAnswer, nextQuiz } = useQuizStore();
+
+  // Initialize Solo Mode
+  useEffect(() => {
+    if (soloConfig) {
+      generateSoloQuizSet(soloConfig);
+    }
+  }, [soloConfig]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -48,51 +63,79 @@ export function GameContainer({ playerName, onGameOver }: GameContainerProps) {
     }
   }, [isGameOver, playerState, onGameOver]);
 
-  const handleLevelUp = () => {
-    // Check if we should show a quiz
-    const quiz = getCurrentQuiz();
-    if (quiz && playerState && playerState.level % 3 === 0) {
-      setShowQuiz(true);
-      pauseGame();
-    }
-  };
-
+  // Handle level up - check if we should show quiz
   useEffect(() => {
     if (levelUpData) {
-      handleLevelUp();
+      const quiz = getCurrentQuiz();
+      // Show quiz every 3 levels
+      if (quiz && playerState && playerState.level % 3 === 0) {
+        setShowQuiz(true);
+        setQuizAnsweredCorrectly(null);
+        pauseGame();
+      } else {
+        // No quiz, show all upgrades
+        setFilteredUpgrades(levelUpData.upgrades);
+        setQuizAnsweredCorrectly(null);
+      }
     }
   }, [levelUpData]);
 
   const handleQuizAnswer = (selectedIndex: number, isCorrect: boolean) => {
     submitAnswer(selectedIndex, 0);
     setShowQuiz(false);
+    setQuizAnsweredCorrectly(isCorrect);
+    nextQuiz(); // Move to next quiz for next time
 
-    if (isCorrect) {
-      // Bonus: show all upgrades
+    if (levelUpData) {
+      if (isCorrect) {
+        // Correct: Get all 3 upgrade choices + bonus score
+        setFilteredUpgrades(levelUpData.upgrades);
+        EventBus.emit(GameEvents.QUIZ_RESULT, { correct: true });
+      } else {
+        // Wrong: Only get 1 random upgrade choice (penalty)
+        const randomUpgrade = levelUpData.upgrades[Math.floor(Math.random() * levelUpData.upgrades.length)];
+        setFilteredUpgrades([randomUpgrade]);
+        EventBus.emit(GameEvents.QUIZ_RESULT, { correct: false });
+      }
     }
-
-    // Continue to upgrade selection
   };
 
   const handleUpgradeSelect = (type: string, id: string) => {
     selectUpgrade(type, id);
+    setFilteredUpgrades([]);
+    setQuizAnsweredCorrectly(null);
   };
 
   const handleJoystickMove = (x: number, y: number) => {
     sendJoystickInput(x, y);
   };
 
+  // Determine if we should show upgrade selection
+  const showUpgradeSelect = levelUpData && !showQuiz && filteredUpgrades.length > 0;
+
   return (
-    <div className="relative w-full h-full bg-pixel-dark overflow-hidden">
+    <div style={{
+      position: 'relative',
+      width: '100%',
+      height: '100%',
+      background: '#0a0a0f',
+      overflow: 'hidden',
+    }}>
       {/* Game Canvas */}
       <div
         id="game-container"
         ref={containerRef}
-        className="w-full h-full"
+        tabIndex={0}
+        style={{
+          width: '100%',
+          height: '100%',
+          outline: 'none',
+        }}
+        onMouseDown={(e) => e.currentTarget.focus()}
       />
 
       {/* HUD Overlay */}
-      {isReady && playerState && (
+      {isReady && (
         <GameHUD />
       )}
 
@@ -102,7 +145,7 @@ export function GameContainer({ playerName, onGameOver }: GameContainerProps) {
       )}
 
       {/* Quiz Overlay */}
-      {showQuiz && (
+      {showQuiz && getCurrentQuiz() && (
         <QuizOverlay
           quiz={getCurrentQuiz()!}
           timeLimit={15}
@@ -111,18 +154,43 @@ export function GameContainer({ playerName, onGameOver }: GameContainerProps) {
       )}
 
       {/* Upgrade Selection */}
-      {levelUpData && !showQuiz && (
+      {showUpgradeSelect && (
         <UpgradeSelect
-          upgrades={levelUpData.upgrades.map((u: any) => ({ ...u, name: u.nameKo || u.name, description: u.descriptionKo || u.description, icon: u.icon || '⚡' }))}
+          upgrades={filteredUpgrades.map((u: any) => ({
+            ...u,
+            name: u.nameKo || u.name,
+            description: u.descriptionKo || u.description,
+            icon: u.icon || '⚡'
+          }))}
           onSelect={handleUpgradeSelect}
+          quizResult={quizAnsweredCorrectly}
         />
       )}
 
       {/* Loading State */}
       {!isReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-pixel-dark">
-          <div className="text-white font-pixel text-xl animate-pulse">
-            Loading...
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#0a0a0f',
+          gap: 24,
+        }}>
+          {/* Dot loading animation */}
+          <div className="dot-spinner">
+            <div className="dot" />
+            <div className="dot" />
+            <div className="dot" />
+          </div>
+          <div style={{
+            color: '#71717a',
+            fontSize: 14,
+            fontWeight: 500,
+          }}>
+            게임 로딩 중...
           </div>
         </div>
       )}

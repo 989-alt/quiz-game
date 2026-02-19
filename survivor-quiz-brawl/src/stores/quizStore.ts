@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Quiz, QuizSet, QuizResult } from '../types/quiz';
+import { SoloQuizGenerator } from '../game/utils/SoloQuizGenerator';
+import { SPELLING_QUIZZES, IDIOM_QUIZZES } from '../game/utils/SoloQuizData';
 
 interface QuizState {
   // Quiz sets
@@ -46,12 +48,57 @@ interface QuizState {
   setGenerating: (isGenerating: boolean) => void;
   setGenerationProgress: (progress: number) => void;
   setGenerationError: (error: string | null) => void;
+  // ... inside interface
+  generateSoloQuizSet: (config: { topic: string; grade?: number }) => void;
 }
 
 export const useQuizStore = create<QuizState>()(
   persist(
     (set, get) => ({
       quizSets: [],
+
+      generateSoloQuizSet: (config) => {
+        const { topic, grade } = config;
+        let quizzes: import('../types/quiz').Quiz[] = [];
+        const quizCount = 20;
+
+        if (topic === 'math') {
+          for (let i = 0; i < quizCount; i++) {
+            const q = SoloQuizGenerator.generateMathQuiz(grade || 1);
+            quizzes.push({
+              id: `math-${Date.now()}-${i}`,
+              question: q.question!,
+              options: q.options!,
+              correctIndex: q.correctIndex!,
+              difficulty: 'medium',
+              timeLimit: 10,
+            } as any);
+          }
+        } else if (topic === 'spelling' || topic === 'idiom') {
+          const source = topic === 'spelling' ? SPELLING_QUIZZES : IDIOM_QUIZZES;
+          // Shuffle and pick
+          const shuffled = [...source].sort(() => 0.5 - Math.random()).slice(0, quizCount);
+          quizzes = shuffled.map((q: any, i: number) => ({
+            id: `${topic}-${Date.now()}-${i}`,
+            question: q.question,
+            options: q.options,
+            correctIndex: q.correctIndex,
+            difficulty: 'medium',
+            timeLimit: 10,
+          } as any));
+        }
+
+        const soloSet: QuizSet = {
+          id: `solo-${Date.now()}`,
+          title: `솔로 플레이: ${topic === 'math' ? `수학 (${grade}학년)` : topic === 'spelling' ? '맞춤법' : '속담'}`,
+          quizzes,
+          createdAt: new Date().toISOString(),
+        };
+
+        set({ currentQuizSet: soloSet, currentQuizIndex: 0, quizResults: [] });
+      },
+      // ... rest of store
+
       currentQuizSet: null,
       currentQuizIndex: 0,
       quizResults: [],
@@ -108,11 +155,11 @@ export const useQuizStore = create<QuizState>()(
           quizSets: state.quizSets.map((qs) =>
             qs.id === setId
               ? {
-                  ...qs,
-                  quizzes: qs.quizzes.map((q) =>
-                    q.id === quizId ? { ...q, ...updates } : q
-                  ),
-                }
+                ...qs,
+                quizzes: qs.quizzes.map((q) =>
+                  q.id === quizId ? { ...q, ...updates } : q
+                ),
+              }
               : qs
           ),
         }));

@@ -44,10 +44,14 @@ export class BootScene extends Phaser.Scene {
     });
 
     // Generate placeholder sprites programmatically
-    this.createPlaceholderSprites();
+    // this.createPlaceholderSprites(); moved to create
   }
 
   create(): void {
+    // Generate placeholder sprites programmatically
+    this.createPlaceholderSprites();
+    console.log('Placeholder sprites created');
+
     this.scene.start('GameScene');
   }
 

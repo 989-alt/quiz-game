@@ -5,6 +5,49 @@ import { GameContainer } from './components/student/GameContainer';
 
 type AppView = 'home' | 'teacher' | 'student' | 'game';
 
+// Dot cluster component for decorations
+function DotCluster({
+  x, y, color, delay = 0, size = 'md'
+}: {
+  x: string;
+  y: string;
+  color: string;
+  delay?: number;
+  size?: 'sm' | 'md' | 'lg';
+}) {
+  const sizes = {
+    sm: { dot: 4, gap: 4 },
+    md: { dot: 6, gap: 6 },
+    lg: { dot: 8, gap: 8 },
+  };
+  const s = sizes[size];
+
+  return (
+    <div
+      className="dot-cluster"
+      style={{
+        left: x,
+        top: y,
+        color,
+        animationDelay: `${delay}s`,
+        gap: s.gap,
+      }}
+    >
+      {[...Array(3)].map((_, i) => (
+        <div
+          key={i}
+          className="dot"
+          style={{
+            width: s.dot,
+            height: s.dot,
+            animationDelay: `${i * 0.2}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function App() {
   const [view, setView] = useState<AppView>('home');
   const [playerName, setPlayerName] = useState('');
@@ -43,14 +86,18 @@ function App() {
     setView('game');
   }, []);
 
-  const handlePlaySolo = useCallback((name: string) => {
+  const [soloConfig, setSoloConfig] = useState<{ topic: string; grade?: number } | null>(null);
+
+  const handlePlaySolo = useCallback((name: string, config: { topic: string; grade?: number }) => {
     setPlayerName(name);
-    setRoomCode('');
+    setSoloConfig(config);
+    setRoomCode('SOLO');
     setView('game');
   }, []);
 
   const handleBackToHome = useCallback(() => {
     navigateTo('home');
+    setSoloConfig(null);
   }, [navigateTo]);
 
   // Teacher Dashboard
@@ -59,38 +106,67 @@ function App() {
       <div style={{
         width: '100vw',
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1a1028 0%, #251740 40%, #1e1535 100%)',
+        background: '#0a0a0f',
         position: 'relative',
       }}>
-        <div className="bg-stars" />
-        <header className="relative z-10" style={{
-          padding: 'clamp(12px, 2vw, 24px) clamp(16px, 3vw, 48px)',
+        <div className="dot-grid-bg" />
+        <header style={{
+          position: 'relative',
+          zIndex: 10,
+          padding: 'clamp(16px, 2.5vw, 28px) clamp(20px, 4vw, 56px)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          background: 'rgba(0,0,0,0.3)',
-          borderBottom: '3px solid rgba(155, 89, 182, 0.4)',
+          background: 'rgba(0, 0, 0, 0.4)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+          backdropFilter: 'blur(12px)',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(8px, 1.5vw, 16px)' }}>
-            <span style={{ fontSize: 'clamp(24px, 3vw, 40px)' }}>📚</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(12px, 2vw, 20px)' }}>
+            {/* Logo dots */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 4,
+              padding: 8,
+              background: 'rgba(99, 102, 241, 0.1)',
+              borderRadius: 12,
+            }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1' }} />
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#8b5cf6' }} />
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#a78bfa' }} />
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1' }} />
+            </div>
             <div>
-              <h1 className="font-pixel" style={{ fontSize: 'clamp(10px, 1.5vw, 18px)', color: '#fdcb6e' }}>
-                SURVIVOR QUIZ BRAWL
+              <h1 style={{
+                fontSize: 'clamp(14px, 2vw, 22px)',
+                fontWeight: 700,
+                letterSpacing: '-0.02em',
+                color: '#fafafa',
+              }}>
+                Survivor Quiz Brawl
               </h1>
-              <p className="font-pixel" style={{ fontSize: 'clamp(7px, 0.8vw, 10px)', color: '#b8b5c8', marginTop: '4px' }}>
+              <p style={{
+                fontSize: 'clamp(11px, 1vw, 13px)',
+                color: '#71717a',
+                marginTop: 2,
+                fontWeight: 500,
+              }}>
                 선생님 대시보드
               </p>
             </div>
           </div>
           <button
             onClick={handleBackToHome}
-            className="btn-pixel btn-purple"
-            style={{ padding: 'clamp(8px, 1vw, 14px) clamp(12px, 1.5vw, 24px)', fontSize: 'clamp(7px, 0.9vw, 11px)' }}
+            className="btn-clean btn-ghost"
+            style={{
+              padding: 'clamp(10px, 1.2vw, 14px) clamp(16px, 2vw, 24px)',
+              fontSize: 'clamp(12px, 1vw, 14px)',
+            }}
           >
             ← 홈으로
           </button>
         </header>
-        <div className="relative z-10">
+        <div style={{ position: 'relative', zIndex: 10 }}>
           <Dashboard />
         </div>
       </div>
@@ -113,6 +189,8 @@ function App() {
     return (
       <GameContainer
         playerName={playerName}
+        soloConfig={soloConfig}
+        onExit={handleBackToHome}
       />
     );
   }
@@ -125,205 +203,256 @@ function App() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: 'clamp(16px, 4vw, 60px)',
+      padding: 'clamp(20px, 5vw, 80px)',
       position: 'relative',
       overflow: 'hidden',
-      background: 'linear-gradient(135deg, #1a1028 0%, #2d1b4e 30%, #1e1535 60%, #16102a 100%)',
+      background: '#0a0a0f',
     }}>
 
-      {/* Twinkling Stars Background */}
-      <div className="bg-stars" />
+      {/* Dot Grid Background */}
+      <div className="dot-grid-bg" />
 
-      {/* Floating Decorations */}
-      <div className="float-icon" style={{ top: '10%', left: '8%', animationDelay: '0s', fontSize: 'clamp(20px, 3vw, 40px)' }}>⚔️</div>
-      <div className="float-icon" style={{ top: '20%', right: '10%', animationDelay: '1s', fontSize: 'clamp(18px, 2.5vw, 36px)' }}>🛡️</div>
-      <div className="float-icon" style={{ bottom: '25%', left: '5%', animationDelay: '2s', fontSize: 'clamp(16px, 2.2vw, 32px)' }}>🧠</div>
-      <div className="float-icon" style={{ bottom: '15%', right: '8%', animationDelay: '0.5s', fontSize: 'clamp(18px, 2.8vw, 36px)' }}>📖</div>
-      <div className="float-icon" style={{ top: '50%', left: '15%', animationDelay: '1.5s', fontSize: 'clamp(14px, 1.8vw, 24px)' }}>⭐</div>
-      <div className="float-icon" style={{ top: '35%', right: '15%', animationDelay: '2.5s', fontSize: 'clamp(16px, 2vw, 28px)' }}>💎</div>
+      {/* Floating Dot Clusters */}
+      <div className="floating-dots" style={{ inset: 0, position: 'absolute' }}>
+        <DotCluster x="8%" y="15%" color="#6366f1" delay={0} size="lg" />
+        <DotCluster x="85%" y="20%" color="#22d3ee" delay={1.5} size="md" />
+        <DotCluster x="12%" y="75%" color="#10b981" delay={2} size="md" />
+        <DotCluster x="80%" y="70%" color="#f59e0b" delay={0.5} size="lg" />
+        <DotCluster x="50%" y="8%" color="#8b5cf6" delay={3} size="sm" />
+        <DotCluster x="25%" y="45%" color="#6366f1" delay={1} size="sm" />
+        <DotCluster x="75%" y="45%" color="#22d3ee" delay={2.5} size="sm" />
+      </div>
 
       {/* Main Content */}
-      <div style={{
-        position: 'relative',
-        zIndex: 10,
-        width: '100%',
-        maxWidth: 'clamp(320px, 50vw, 640px)',
-        textAlign: 'center',
-        animation: 'slide-up 0.8s ease-out',
-      }}>
+      <div
+        className="animate-slide-up"
+        style={{
+          position: 'relative',
+          zIndex: 10,
+          width: '100%',
+          maxWidth: 'clamp(340px, 55vw, 680px)',
+          textAlign: 'center',
+        }}
+      >
 
-        {/* Game Logo */}
-        <div style={{ marginBottom: 'clamp(24px, 5vh, 60px)', animation: 'float 3s ease-in-out infinite' }}>
-          {/* Monster Icons Row */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(8px, 1.5vw, 20px)', marginBottom: 'clamp(12px, 2vh, 24px)' }}>
-            {['👾', '🐲', '💀', '👻', '🎃'].map((emoji, i) => (
-              <span
-                key={i}
-                style={{
-                  display: 'inline-block',
-                  fontSize: 'clamp(24px, 4vw, 48px)',
-                  animation: 'bounce-slow 2s ease-in-out infinite',
-                  animationDelay: `${i * 0.15}s`,
-                }}
-              >
-                {emoji}
-              </span>
-            ))}
+        {/* Logo */}
+        <div style={{ marginBottom: 'clamp(32px, 6vh, 72px)' }}>
+          {/* Animated dot matrix logo */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginBottom: 'clamp(20px, 3vh, 36px)',
+          }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(5, 1fr)',
+              gap: 'clamp(6px, 1vw, 12px)',
+              padding: 'clamp(12px, 2vw, 24px)',
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              borderRadius: 'clamp(16px, 2vw, 24px)',
+            }}>
+              {[
+                '#6366f1', '#8b5cf6', '#a78bfa', '#8b5cf6', '#6366f1',
+                '#22d3ee', '#6366f1', '#f43f5e', '#6366f1', '#22d3ee',
+                '#10b981', '#f59e0b', '#6366f1', '#f59e0b', '#10b981',
+              ].map((color, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: 'clamp(10px, 1.5vw, 16px)',
+                    height: 'clamp(10px, 1.5vw, 16px)',
+                    borderRadius: '50%',
+                    background: color,
+                    opacity: 0.8,
+                    animation: `dot-pulse 2s ease-in-out infinite`,
+                    animationDelay: `${i * 0.1}s`,
+                  }}
+                />
+              ))}
+            </div>
           </div>
 
           {/* Title */}
-          <h1
-            className="font-pixel"
-            style={{
-              fontSize: 'clamp(28px, 6vw, 72px)',
-              lineHeight: 1.1,
-              color: '#fdcb6e',
-              textShadow: '0 0 20px rgba(253,203,110,0.4), 0 4px 0 #b8860b, 0 5px 0 #8b6914',
-              letterSpacing: 'clamp(2px, 0.5vw, 6px)',
-              marginBottom: 'clamp(4px, 1vh, 12px)',
-            }}
-          >
-            SURVIVOR
+          <h1 style={{
+            fontSize: 'clamp(32px, 7vw, 80px)',
+            fontWeight: 800,
+            letterSpacing: '-0.03em',
+            lineHeight: 1,
+            marginBottom: 'clamp(8px, 1.5vh, 16px)',
+          }}>
+            <span className="gradient-text">Survivor</span>
           </h1>
-          <h2
-            className="font-pixel"
-            style={{
-              fontSize: 'clamp(18px, 4vw, 48px)',
-              lineHeight: 1.2,
-              background: 'linear-gradient(135deg, #e84393, #fd79a8, #e84393)',
-              backgroundSize: '200% 200%',
-              animation: 'gradient-shift 3s ease infinite',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              filter: 'drop-shadow(0 3px 0 rgba(168, 50, 100, 0.6))',
-              letterSpacing: 'clamp(1px, 0.4vw, 5px)',
-            }}
-          >
-            QUIZ BRAWL
+          <h2 style={{
+            fontSize: 'clamp(20px, 4.5vw, 52px)',
+            fontWeight: 700,
+            letterSpacing: '-0.02em',
+            lineHeight: 1.1,
+            color: '#fafafa',
+          }}>
+            Quiz Brawl
           </h2>
         </div>
 
         {/* Subtitle */}
-        <p className="font-pixel" style={{
-          fontSize: 'clamp(8px, 1.2vw, 14px)',
-          color: '#b8b5c8',
-          marginBottom: 'clamp(24px, 5vh, 60px)',
-          lineHeight: 2,
+        <p style={{
+          fontSize: 'clamp(13px, 1.5vw, 18px)',
+          color: '#71717a',
+          marginBottom: 'clamp(32px, 6vh, 72px)',
+          lineHeight: 1.7,
+          fontWeight: 500,
         }}>
-          퀴즈를 풀며 생존하라! 🎮
-          <br />
-          몬스터를 처치하고 최후의 1인이 되어라! 💪
+          퀴즈를 풀며 생존하라!
+          <span style={{
+            display: 'inline-block',
+            width: 6,
+            height: 6,
+            background: '#6366f1',
+            borderRadius: '50%',
+            margin: '0 12px',
+            verticalAlign: 'middle',
+          }} />
+          최후의 1인이 되어라!
         </p>
 
         {/* Role Selection Cards */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: 'clamp(12px, 2vw, 28px)',
-          maxWidth: 'clamp(280px, 40vw, 520px)',
+          gap: 'clamp(16px, 2.5vw, 32px)',
+          maxWidth: 'clamp(320px, 45vw, 560px)',
           margin: '0 auto',
         }}>
 
           {/* Teacher Card */}
           <button
             onClick={() => navigateTo('teacher')}
-            className="group"
+            className="clean-card card-indigo"
             style={{
-              position: 'relative',
-              padding: 'clamp(16px, 3vw, 40px) clamp(12px, 2vw, 28px)',
-              borderRadius: '16px',
+              padding: 'clamp(24px, 4vw, 48px) clamp(16px, 2.5vw, 32px)',
               textAlign: 'center',
               cursor: 'pointer',
-              background: 'linear-gradient(135deg, rgba(155,89,182,0.15), rgba(155,89,182,0.05))',
-              border: '2px solid rgba(155,89,182,0.3)',
-              boxShadow: '0 4px 20px rgba(155,89,182,0.1)',
-              transition: 'all 0.3s ease',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
-              e.currentTarget.style.borderColor = 'rgba(155,89,182,0.6)';
-              e.currentTarget.style.boxShadow = '0 8px 40px rgba(155,89,182,0.3)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.transform = '';
-              e.currentTarget.style.borderColor = 'rgba(155,89,182,0.3)';
-              e.currentTarget.style.boxShadow = '0 4px 20px rgba(155,89,182,0.1)';
+              border: '1px solid rgba(99, 102, 241, 0.2)',
             }}
           >
-            <div style={{ fontSize: 'clamp(32px, 5vw, 56px)', marginBottom: 'clamp(8px, 1.5vh, 16px)', animation: 'wiggle 2s ease-in-out infinite' }}>
-              🎓
+            {/* Dot icon */}
+            <div style={{
+              display: 'inline-grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 4,
+              padding: 12,
+              background: 'rgba(99, 102, 241, 0.1)',
+              borderRadius: 16,
+              marginBottom: 'clamp(12px, 2vh, 20px)',
+            }}>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#6366f1' }} />
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#8b5cf6' }} />
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#8b5cf6' }} />
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#6366f1' }} />
             </div>
-            <div className="font-pixel" style={{ fontSize: 'clamp(10px, 1.4vw, 16px)', color: '#c39bd3', marginBottom: 'clamp(4px, 0.8vh, 10px)' }}>
+            <div style={{
+              fontSize: 'clamp(15px, 1.8vw, 20px)',
+              fontWeight: 700,
+              color: '#a5b4fc',
+              marginBottom: 'clamp(6px, 1vh, 12px)',
+            }}>
               선생님
             </div>
-            <div className="font-pixel" style={{ fontSize: 'clamp(6px, 0.8vw, 10px)', color: '#8b7baa', lineHeight: 2 }}>
+            <div style={{
+              fontSize: 'clamp(11px, 1vw, 14px)',
+              color: '#6b7280',
+              lineHeight: 1.6,
+              fontWeight: 500,
+            }}>
               퀴즈 만들기
               <br />
               게임 관리
             </div>
-            <div style={{
-              position: 'absolute', inset: 0, borderRadius: '16px', opacity: 0,
-              background: 'radial-gradient(circle at center, rgba(155,89,182,0.1), transparent 70%)',
-              transition: 'opacity 0.3s',
-            }}
-              className="group-hover:!opacity-100"
-            />
           </button>
 
           {/* Student Card */}
           <button
             onClick={() => navigateTo('student')}
-            className="group"
+            className="clean-card card-cyan"
             style={{
-              position: 'relative',
-              padding: 'clamp(16px, 3vw, 40px) clamp(12px, 2vw, 28px)',
-              borderRadius: '16px',
+              padding: 'clamp(24px, 4vw, 48px) clamp(16px, 2.5vw, 32px)',
               textAlign: 'center',
               cursor: 'pointer',
-              background: 'linear-gradient(135deg, rgba(52,152,219,0.15), rgba(0,206,201,0.05))',
-              border: '2px solid rgba(52,152,219,0.3)',
-              boxShadow: '0 4px 20px rgba(52,152,219,0.1)',
-              transition: 'all 0.3s ease',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
-              e.currentTarget.style.borderColor = 'rgba(52,152,219,0.6)';
-              e.currentTarget.style.boxShadow = '0 8px 40px rgba(52,152,219,0.3)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.transform = '';
-              e.currentTarget.style.borderColor = 'rgba(52,152,219,0.3)';
-              e.currentTarget.style.boxShadow = '0 4px 20px rgba(52,152,219,0.1)';
+              border: '1px solid rgba(34, 211, 238, 0.2)',
             }}
           >
-            <div style={{ fontSize: 'clamp(32px, 5vw, 56px)', marginBottom: 'clamp(8px, 1.5vh, 16px)', animation: 'wiggle 2s ease-in-out infinite', animationDelay: '0.3s' }}>
-              🎮
+            {/* Dot icon */}
+            <div style={{
+              display: 'inline-grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 4,
+              padding: 12,
+              background: 'rgba(34, 211, 238, 0.1)',
+              borderRadius: 16,
+              marginBottom: 'clamp(12px, 2vh, 20px)',
+            }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22d3ee' }} />
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#06b6d4' }} />
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22d3ee' }} />
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#06b6d4' }} />
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22d3ee' }} />
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#06b6d4' }} />
             </div>
-            <div className="font-pixel" style={{ fontSize: 'clamp(10px, 1.4vw, 16px)', color: '#7ec8e3', marginBottom: 'clamp(4px, 0.8vh, 10px)' }}>
+            <div style={{
+              fontSize: 'clamp(15px, 1.8vw, 20px)',
+              fontWeight: 700,
+              color: '#67e8f9',
+              marginBottom: 'clamp(6px, 1vh, 12px)',
+            }}>
               학생
             </div>
-            <div className="font-pixel" style={{ fontSize: 'clamp(6px, 0.8vw, 10px)', color: '#6b9db7', lineHeight: 2 }}>
+            <div style={{
+              fontSize: 'clamp(11px, 1vw, 14px)',
+              color: '#6b7280',
+              lineHeight: 1.6,
+              fontWeight: 500,
+            }}>
               방 참여하기
               <br />
               게임 플레이
             </div>
-            <div style={{
-              position: 'absolute', inset: 0, borderRadius: '16px', opacity: 0,
-              background: 'radial-gradient(circle at center, rgba(52,152,219,0.1), transparent 70%)',
-              transition: 'opacity 0.3s',
-            }}
-              className="group-hover:!opacity-100"
-            />
           </button>
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop: 'clamp(24px, 5vh, 60px)' }}>
-          <p className="font-pixel" style={{ fontSize: 'clamp(5px, 0.7vw, 8px)', color: '#6c6783' }}>
+        <div style={{ marginTop: 'clamp(32px, 6vh, 72px)' }}>
+          {/* Dot separator */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 8,
+            marginBottom: 16,
+          }}>
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  width: 4,
+                  height: 4,
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                }}
+              />
+            ))}
+          </div>
+          <p style={{
+            fontSize: 'clamp(10px, 0.9vw, 12px)',
+            color: '#52525b',
+            fontWeight: 500,
+          }}>
             © 2026 Survivor Quiz Brawl
           </p>
-          <p className="font-pixel" style={{ fontSize: 'clamp(4px, 0.6vw, 7px)', color: '#4a4562', marginTop: '4px' }}>
-            Powered by Phaser 3 + React + Gemini AI
+          <p style={{
+            fontSize: 'clamp(9px, 0.8vw, 11px)',
+            color: '#3f3f46',
+            marginTop: 6,
+          }}>
+            Phaser 3 · React · Gemini AI
           </p>
         </div>
       </div>

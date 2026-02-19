@@ -1,14 +1,46 @@
-import React from 'react';
-import { useGameStore } from '../../stores/gameStore';
+import { useEffect, useState } from 'react';
+import { EventBus, GameEvents } from '../../game/utils/EventBus';
+
+interface PlayerStateData {
+  hp: number;
+  maxHp: number;
+  level: number;
+  xp: number;
+  xpToNext: number;
+  score: number;
+  survivalTime: number;
+  wave: number;
+  monstersKilled: number;
+}
 
 export function GameHUD() {
-  const { player, survivalTime, monstersKilled } = useGameStore();
-  const { hp: playerHP, maxHp: playerMaxHP, xp: playerXP, xpToNext: playerMaxXP, level: playerLevel, score } = player;
+  const [state, setState] = useState<PlayerStateData>({
+    hp: 100,
+    maxHp: 100,
+    level: 1,
+    xp: 0,
+    xpToNext: 10,
+    score: 0,
+    survivalTime: 0,
+    wave: 1,
+    monstersKilled: 0,
+  });
 
-  const hpPercent = Math.max(0, (playerHP / playerMaxHP) * 100);
-  const xpPercent = Math.max(0, (playerXP / playerMaxXP) * 100);
+  useEffect(() => {
+    const handleStateUpdate = (data: PlayerStateData) => {
+      setState(data);
+    };
 
-  const hpColor = hpPercent > 50 ? '#00b894' : hpPercent > 25 ? '#fdcb6e' : '#d63031';
+    EventBus.on(GameEvents.PLAYER_STATE_UPDATE, handleStateUpdate);
+
+    return () => {
+      EventBus.off(GameEvents.PLAYER_STATE_UPDATE, handleStateUpdate);
+    };
+  }, []);
+
+  const hpPercent = Math.max(0, (state.hp / state.maxHp) * 100);
+  const xpPercent = Math.max(0, (state.xp / state.xpToNext) * 100);
+  const hpColor = hpPercent > 50 ? '#10b981' : hpPercent > 25 ? '#f59e0b' : '#ef4444';
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -18,96 +50,126 @@ export function GameHUD() {
 
   return (
     <div style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      padding: 'clamp(12px, 2vw, 20px)',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
-      gap: 'clamp(6px, 1vw, 14px)',
+      gap: 'clamp(8px, 1.5vw, 16px)',
       pointerEvents: 'none',
     }}>
 
       {/* Left: Player Info */}
       <div style={{
-        borderRadius: 'clamp(8px, 1vw, 14px)',
-        padding: 'clamp(8px, 1.2vw, 16px)',
-        minWidth: 'clamp(140px, 18vw, 260px)',
-        background: 'rgba(10, 14, 26, 0.85)',
-        border: '2px solid rgba(255,255,255,0.1)',
-        backdropFilter: 'blur(8px)',
+        borderRadius: 16,
+        padding: 'clamp(12px, 1.5vw, 20px)',
+        minWidth: 'clamp(160px, 20vw, 280px)',
+        background: 'rgba(10, 10, 15, 0.9)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(12px)',
       }}>
         {/* Player Name + Level */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(4px, 0.5vw, 8px)', marginBottom: 'clamp(6px, 0.8vw, 10px)' }}>
-          <span style={{
-            padding: 'clamp(2px, 0.3vw, 4px) clamp(4px, 0.5vw, 8px)',
-            borderRadius: '6px',
-            fontSize: 'clamp(6px, 0.7vw, 9px)',
-            fontFamily: "'Press Start 2P', monospace",
-            background: 'linear-gradient(135deg, #9b59b6, #e84393)',
-            color: '#fff',
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          marginBottom: 'clamp(10px, 1.2vw, 14px)',
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '4px 10px',
+            borderRadius: 8,
+            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
           }}>
-            Lv.{playerLevel}
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.8)' }} />
+            <span style={{
+              fontSize: 'clamp(10px, 1vw, 13px)',
+              fontWeight: 700,
+              color: '#fff',
+            }}>
+              Lv.{state.level}
+            </span>
+          </div>
+          <span style={{ fontSize: 'clamp(11px, 1vw, 14px)', fontWeight: 600, color: '#e4e4e7' }}>
+            Wave {state.wave}
           </span>
-          <span className="font-pixel" style={{ fontSize: 'clamp(6px, 0.7vw, 9px)', color: '#fff' }}>Player</span>
         </div>
 
         {/* HP Bar */}
-        <div style={{ marginBottom: 'clamp(4px, 0.5vw, 8px)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-            <span className="font-pixel" style={{ fontSize: 'clamp(5px, 0.55vw, 7px)', color: hpColor }}>❤️ HP</span>
-            <span className="font-pixel" style={{ fontSize: 'clamp(5px, 0.55vw, 7px)', color: '#b8b5c8' }}>{playerHP}/{playerMaxHP}</span>
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: hpColor }} />
+              <span style={{ fontSize: 'clamp(10px, 0.9vw, 12px)', fontWeight: 600, color: hpColor }}>HP</span>
+            </div>
+            <span style={{ fontSize: 'clamp(10px, 0.9vw, 12px)', color: '#71717a', fontWeight: 500 }}>
+              {Math.floor(state.hp)}/{state.maxHp}
+            </span>
           </div>
-          <div style={{ width: '100%', height: 'clamp(6px, 0.7vw, 10px)', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', overflow: 'hidden' }}>
-            <div style={{
-              width: `${hpPercent}%`,
-              height: '100%',
-              borderRadius: '999px',
-              background: `linear-gradient(90deg, ${hpColor}, ${hpColor}88)`,
-              transition: 'width 0.3s ease',
-              animation: hpPercent <= 25 ? 'pulse-glow 0.5s ease-in-out infinite' : 'none',
-            }} />
+          <div className="progress-container">
+            <div
+              className={`progress-bar progress-hp ${hpPercent <= 50 ? (hpPercent <= 25 ? 'danger' : 'warning') : ''}`}
+              style={{ width: `${hpPercent}%` }}
+            />
           </div>
         </div>
 
         {/* XP Bar */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-            <span className="font-pixel" style={{ fontSize: 'clamp(5px, 0.55vw, 7px)', color: '#74b9ff' }}>⭐ XP</span>
-            <span className="font-pixel" style={{ fontSize: 'clamp(5px, 0.55vw, 7px)', color: '#b8b5c8' }}>{playerXP}/{playerMaxXP}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1' }} />
+              <span style={{ fontSize: 'clamp(10px, 0.9vw, 12px)', fontWeight: 600, color: '#a5b4fc' }}>XP</span>
+            </div>
+            <span style={{ fontSize: 'clamp(10px, 0.9vw, 12px)', color: '#71717a', fontWeight: 500 }}>
+              {state.xp}/{state.xpToNext}
+            </span>
           </div>
-          <div style={{ width: '100%', height: 'clamp(6px, 0.7vw, 10px)', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', overflow: 'hidden' }}>
-            <div style={{
-              width: `${xpPercent}%`,
-              height: '100%',
-              borderRadius: '999px',
-              background: 'linear-gradient(90deg, #3498db, #74b9ff)',
-              transition: 'width 0.3s ease',
-            }} />
+          <div className="progress-container">
+            <div className="progress-bar progress-xp" style={{ width: `${xpPercent}%` }} />
           </div>
         </div>
       </div>
 
       {/* Right: Score & Stats */}
       <div style={{
-        borderRadius: 'clamp(8px, 1vw, 14px)',
-        padding: 'clamp(8px, 1.2vw, 16px)',
+        borderRadius: 16,
+        padding: 'clamp(12px, 1.5vw, 20px)',
         textAlign: 'right',
-        background: 'rgba(10, 14, 26, 0.85)',
-        border: '2px solid rgba(255,255,255,0.1)',
-        backdropFilter: 'blur(8px)',
+        background: 'rgba(10, 10, 15, 0.9)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(12px)',
       }}>
-        <p className="font-pixel" style={{
-          fontSize: 'clamp(10px, 1.4vw, 18px)',
-          color: '#fdcb6e',
-          textShadow: '0 2px 0 #b8860b',
-          marginBottom: 'clamp(4px, 0.5vw, 8px)',
+        {/* Score */}
+        <div style={{
+          fontSize: 'clamp(18px, 2.2vw, 28px)',
+          fontWeight: 800,
+          letterSpacing: '-0.02em',
+          marginBottom: 8,
         }}>
-          {score.toLocaleString()}
-        </p>
-        <p className="font-pixel" style={{ fontSize: 'clamp(5px, 0.6vw, 8px)', color: '#b8b5c8', marginBottom: 'clamp(2px, 0.3vw, 4px)' }}>
-          💀 {monstersKilled} kills
-        </p>
-        <p className="font-pixel" style={{ fontSize: 'clamp(5px, 0.6vw, 8px)', color: '#6c6783' }}>
-          ⏱️ {formatTime(survivalTime)}
-        </p>
+          <span className="gradient-text-amber">{state.score.toLocaleString()}</span>
+        </div>
+
+        {/* Stats */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+            <span style={{ fontSize: 'clamp(10px, 0.9vw, 12px)', color: '#71717a', fontWeight: 500 }}>
+              {state.monstersKilled} kills
+            </span>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f43f5e' }} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+            <span style={{ fontSize: 'clamp(10px, 0.9vw, 12px)', color: '#52525b', fontWeight: 500 }}>
+              {formatTime(state.survivalTime)}
+            </span>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1' }} />
+          </div>
+        </div>
       </div>
     </div>
   );

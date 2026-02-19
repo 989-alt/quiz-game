@@ -3,7 +3,6 @@ import { FileUpload } from './FileUpload';
 import { QuizEditor } from './QuizEditor';
 import { QRLobby } from './QRLobby';
 import { Leaderboard } from './Leaderboard';
-import { PixelButton } from '../shared/PixelButton';
 import { useQuizStore } from '../../stores/quizStore';
 import { useRoomStore } from '../../stores/roomStore';
 import type { QuizSet } from '../../types/quiz';
@@ -11,10 +10,10 @@ import type { QuizSet } from '../../types/quiz';
 type TeacherStep = 'create' | 'edit' | 'lobby' | 'game';
 
 const STEPS = [
-  { id: 'create' as const, label: '퀴즈 만들기', icon: '📝', num: 1 },
-  { id: 'edit' as const, label: '퀴즈 수정', icon: '✏️', num: 2 },
-  { id: 'lobby' as const, label: '서버 열기', icon: '🌐', num: 3 },
-  { id: 'game' as const, label: '게임 진행', icon: '🎮', num: 4 },
+  { id: 'create' as const, label: '퀴즈 만들기', color: '#6366f1', num: 1 },
+  { id: 'edit' as const, label: '퀴즈 수정', color: '#8b5cf6', num: 2 },
+  { id: 'lobby' as const, label: '서버 열기', color: '#22d3ee', num: 3 },
+  { id: 'game' as const, label: '게임 진행', color: '#10b981', num: 4 },
 ];
 
 export function Dashboard() {
@@ -44,26 +43,63 @@ export function Dashboard() {
   };
 
   return (
-    <div style={{ padding: 'clamp(16px, 3vw, 40px)' }}>
+    <div style={{ padding: 'clamp(20px, 4vw, 48px)' }}>
 
       {/* API Key Section */}
-      <div className="pixel-card" style={{ padding: 'clamp(12px, 2vw, 24px)', marginBottom: 'clamp(16px, 2.5vw, 32px)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(8px, 1vw, 16px)', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 'clamp(16px, 2vw, 24px)' }}>🔑</span>
-          <label className="font-pixel" style={{ fontSize: 'clamp(7px, 0.9vw, 11px)', color: '#b8b5c8' }}>
-            Gemini API Key:
+      <div
+        className="clean-card"
+        style={{
+          padding: 'clamp(16px, 2.5vw, 28px)',
+          marginBottom: 'clamp(20px, 3vw, 40px)',
+        }}
+      >
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'clamp(12px, 1.5vw, 20px)',
+          flexWrap: 'wrap',
+        }}>
+          {/* Key icon as dots */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: 3,
+            padding: 8,
+            background: 'rgba(245, 158, 11, 0.1)',
+            borderRadius: 10,
+          }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b' }} />
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fbbf24' }} />
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fbbf24' }} />
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b' }} />
+          </div>
+          <label style={{
+            fontSize: 'clamp(12px, 1.1vw, 14px)',
+            color: '#a1a1aa',
+            fontWeight: 600,
+          }}>
+            Gemini API Key
           </label>
           <input
             type="password"
-            className="pixel-input"
+            className="clean-input"
             value={geminiApiKey}
             onChange={(e) => setGeminiApiKey(e.target.value)}
             placeholder="API 키를 입력하세요"
-            style={{ flex: 1, minWidth: '160px', fontSize: 'clamp(7px, 0.8vw, 10px)', padding: 'clamp(6px, 0.8vw, 12px) clamp(8px, 1vw, 16px)' }}
+            style={{
+              flex: 1,
+              minWidth: '180px',
+              fontSize: 'clamp(12px, 1vw, 14px)',
+              padding: 'clamp(10px, 1vw, 14px) clamp(12px, 1.2vw, 18px)',
+            }}
           />
           {geminiApiKey && (
-            <span className="pixel-badge" style={{ background: 'rgba(0,184,148,0.15)', color: '#55efc4', fontSize: 'clamp(6px, 0.7vw, 8px)' }}>
-              ✅ 설정됨
+            <span
+              className="clean-badge badge-emerald"
+              style={{ fontSize: 'clamp(10px, 0.9vw, 12px)' }}
+            >
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />
+              설정됨
             </span>
           )}
         </div>
@@ -74,8 +110,8 @@ export function Dashboard() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '0',
-        marginBottom: 'clamp(20px, 3vw, 40px)',
+        gap: 0,
+        marginBottom: 'clamp(28px, 4vw, 48px)',
         flexWrap: 'wrap',
       }}>
         {STEPS.map((step, index) => {
@@ -89,52 +125,105 @@ export function Dashboard() {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 'clamp(4px, 0.5vw, 8px)',
-                  padding: 'clamp(8px, 1vw, 16px)',
+                  gap: 'clamp(8px, 1vw, 12px)',
+                  padding: 'clamp(12px, 1.5vw, 20px)',
                   background: 'transparent',
                   border: 'none',
                   cursor: status === 'locked' ? 'not-allowed' : 'pointer',
-                  opacity: status === 'locked' ? 0.4 : 1,
-                  transition: 'all 0.3s',
+                  opacity: status === 'locked' ? 0.35 : 1,
+                  transition: 'all 0.3s ease',
                 }}
               >
+                {/* Step indicator with dots */}
                 <div style={{
-                  width: 'clamp(36px, 4vw, 56px)',
-                  height: 'clamp(36px, 4vw, 56px)',
-                  borderRadius: '50%',
+                  width: 'clamp(44px, 5vw, 64px)',
+                  height: 'clamp(44px, 5vw, 64px)',
+                  borderRadius: 16,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 'clamp(14px, 1.8vw, 22px)',
-                  fontFamily: "'Press Start 2P', monospace",
-                  background: status === 'completed'
-                    ? 'linear-gradient(135deg, #00b894, #55efc4)'
-                    : status === 'active'
-                      ? 'linear-gradient(135deg, #9b59b6, #e84393)'
-                      : 'rgba(255,255,255,0.06)',
-                  border: `2px solid ${status === 'completed' ? '#00b894' : status === 'active' ? '#9b59b6' : 'rgba(255,255,255,0.15)'}`,
-                  boxShadow: status === 'active' ? '0 0 20px rgba(155,89,182,0.4)' : 'none',
-                  color: status === 'locked' ? '#6c6783' : '#fff',
+                  background: status === 'active'
+                    ? `linear-gradient(135deg, ${step.color}, ${step.color}cc)`
+                    : status === 'completed'
+                      ? 'rgba(16, 185, 129, 0.15)'
+                      : 'rgba(255, 255, 255, 0.03)',
+                  border: `2px solid ${
+                    status === 'active'
+                      ? step.color
+                      : status === 'completed'
+                        ? 'rgba(16, 185, 129, 0.4)'
+                        : 'rgba(255, 255, 255, 0.08)'
+                  }`,
+                  boxShadow: status === 'active'
+                    ? `0 8px 24px -4px ${step.color}50`
+                    : 'none',
+                  transition: 'all 0.3s ease',
                 }}>
-                  {status === 'completed' ? '✓' : step.icon}
+                  {status === 'completed' ? (
+                    <div style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: '50%',
+                      background: '#10b981',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontSize: 12,
+                      fontWeight: 700,
+                    }}>
+                      ✓
+                    </div>
+                  ) : (
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: 4,
+                    }}>
+                      {[...Array(4)].map((_, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            background: status === 'active'
+                              ? 'rgba(255, 255, 255, 0.9)'
+                              : step.color,
+                            opacity: status === 'locked' ? 0.3 : 0.8,
+                            animation: status === 'active'
+                              ? `dot-pulse 2s ease-in-out infinite ${i * 0.15}s`
+                              : 'none',
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <span className="font-pixel" style={{
-                  fontSize: 'clamp(6px, 0.7vw, 9px)',
-                  color: status === 'active' ? '#fdcb6e' : status === 'completed' ? '#55efc4' : '#6c6783',
+                <span style={{
+                  fontSize: 'clamp(11px, 1vw, 13px)',
+                  fontWeight: 600,
+                  color: status === 'active'
+                    ? '#fafafa'
+                    : status === 'completed'
+                      ? '#6ee7b7'
+                      : '#52525b',
                   whiteSpace: 'nowrap',
                 }}>
                   {step.label}
                 </span>
               </button>
+
+              {/* Connector line */}
               {index < STEPS.length - 1 && (
                 <div style={{
-                  width: 'clamp(24px, 4vw, 60px)',
-                  height: '3px',
+                  width: 'clamp(32px, 5vw, 72px)',
+                  height: 3,
+                  borderRadius: 2,
                   background: getStepStatus(STEPS[index + 1].id) !== 'locked'
-                    ? 'linear-gradient(90deg, #9b59b6, #e84393)'
-                    : 'rgba(255,255,255,0.1)',
-                  borderRadius: '2px',
-                  transition: 'background 0.3s',
+                    ? `linear-gradient(90deg, ${step.color}, ${STEPS[index + 1].color})`
+                    : 'rgba(255, 255, 255, 0.06)',
+                  transition: 'background 0.3s ease',
                 }} />
               )}
             </div>
@@ -143,7 +232,7 @@ export function Dashboard() {
       </div>
 
       {/* Step Content */}
-      <div style={{ animation: 'slide-up 0.4s ease-out' }}>
+      <div className="animate-fade-in">
         {currentStep === 'create' && (
           <FileUpload
             apiKey={geminiApiKey}

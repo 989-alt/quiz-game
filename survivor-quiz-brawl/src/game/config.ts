@@ -38,7 +38,7 @@ export const GAME_CONFIG = {
 export const createPhaserConfig = (parent: string): Phaser.Types.Core.GameConfig => ({
   type: Phaser.AUTO,
   parent,
-  backgroundColor: '#1a1a2e',
+  backgroundColor: '#0a0a0f',
   scale: {
     mode: Phaser.Scale.RESIZE,
     width: '100%',
@@ -59,5 +59,6 @@ export const createPhaserConfig = (parent: string): Phaser.Types.Core.GameConfig
   },
   input: {
     activePointers: 2,
+    keyboard: true,
   },
 });

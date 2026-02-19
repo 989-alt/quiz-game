@@ -1,37 +1,31 @@
-import React from 'react';
 import type { UpgradeOption } from '../../types/game';
 
 interface UpgradeSelectProps {
   upgrades: UpgradeOption[];
   onSelect: (type: string, id: string) => void;
+  quizResult?: boolean | null; // true = correct, false = wrong, null = no quiz
 }
 
-export function UpgradeSelect({ upgrades, onSelect }: UpgradeSelectProps) {
+export function UpgradeSelect({ upgrades, onSelect, quizResult }: UpgradeSelectProps) {
   const getRarity = (upgrade: UpgradeOption): string => {
     if (upgrade.isEvolution) return 'evolution';
     if (upgrade.isNew) return 'new';
     return 'upgrade';
   };
 
+  const rarityConfig: Record<string, { color: string; bg: string; label: string }> = {
+    evolution: { color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)', label: '진화' },
+    new: { color: '#a78bfa', bg: 'rgba(167, 139, 250, 0.1)', label: '신규' },
+    upgrade: { color: '#67e8f9', bg: 'rgba(103, 232, 249, 0.1)', label: '강화' },
+  };
+
   const getCardStyle = (upgrade: UpgradeOption): React.CSSProperties => {
     const rarity = getRarity(upgrade);
-    switch (rarity) {
-      case 'evolution': return { borderColor: 'rgba(253,203,110,0.5)', background: 'linear-gradient(135deg, rgba(253,203,110,0.12), rgba(253,203,110,0.03))' };
-      case 'new': return { borderColor: 'rgba(155,89,182,0.5)', background: 'linear-gradient(135deg, rgba(155,89,182,0.12), rgba(155,89,182,0.03))' };
-      default: return { borderColor: 'rgba(52,152,219,0.4)', background: 'linear-gradient(135deg, rgba(52,152,219,0.1), rgba(52,152,219,0.03))' };
-    }
-  };
-
-  const rarityColors: Record<string, string> = {
-    evolution: '#fdcb6e',
-    new: '#c39bd3',
-    upgrade: '#74b9ff',
-  };
-
-  const rarityLabels: Record<string, string> = {
-    evolution: '진화',
-    new: '신규',
-    upgrade: '강화',
+    const config = rarityConfig[rarity];
+    return {
+      borderColor: `${config.color}40`,
+      background: config.bg,
+    };
   };
 
   return (
@@ -41,90 +35,196 @@ export function UpgradeSelect({ upgrades, onSelect }: UpgradeSelectProps) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'rgba(0,0,0,0.8)',
-      backdropFilter: 'blur(6px)',
+      background: 'rgba(10, 10, 15, 0.92)',
+      backdropFilter: 'blur(10px)',
       zIndex: 50,
-      padding: 'clamp(12px, 3vw, 40px)',
+      padding: 'clamp(16px, 4vw, 48px)',
     }}>
-      <div style={{ width: '100%', maxWidth: 'clamp(400px, 60vw, 800px)', textAlign: 'center' }}>
+      <div style={{ width: '100%', maxWidth: 'clamp(420px, 65vw, 880px)', textAlign: 'center' }}>
         {/* Level Up Header */}
-        <div style={{ marginBottom: 'clamp(16px, 3vh, 36px)', animation: 'bounce-slow 2s ease-in-out infinite' }}>
-          <h2 className="font-pixel" style={{
-            fontSize: 'clamp(16px, 3vw, 36px)',
-            color: '#fdcb6e',
-            textShadow: '0 0 20px rgba(253,203,110,0.4), 0 3px 0 #b8860b',
-            marginBottom: 'clamp(4px, 0.5vw, 8px)',
+        <div style={{ marginBottom: 'clamp(24px, 4vh, 48px)' }}>
+          {/* Animated dots */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 8,
+            marginBottom: 16,
           }}>
-            ⬆️ LEVEL UP!
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: i === 2 ? '#fbbf24' : '#6366f1',
+                  animation: 'dot-pulse 1.5s ease-in-out infinite',
+                  animationDelay: `${i * 0.1}s`,
+                }}
+              />
+            ))}
+          </div>
+          <h2 style={{
+            fontSize: 'clamp(24px, 4vw, 44px)',
+            fontWeight: 800,
+            letterSpacing: '-0.03em',
+            marginBottom: 8,
+          }}>
+            <span className="gradient-text-amber">LEVEL UP!</span>
           </h2>
-          <p className="font-pixel" style={{ fontSize: 'clamp(6px, 0.8vw, 10px)', color: '#b8b5c8' }}>업그레이드를 선택하세요</p>
+
+          {/* Quiz result feedback */}
+          {quizResult !== null && (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 16px',
+              borderRadius: 12,
+              marginBottom: 12,
+              background: quizResult
+                ? 'rgba(16, 185, 129, 0.15)'
+                : 'rgba(244, 63, 94, 0.15)',
+              border: `1px solid ${quizResult
+                ? 'rgba(16, 185, 129, 0.3)'
+                : 'rgba(244, 63, 94, 0.3)'}`,
+            }}>
+              <div style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: quizResult ? '#10b981' : '#f43f5e',
+              }} />
+              <span style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: quizResult ? '#6ee7b7' : '#fda4af',
+              }}>
+                {quizResult
+                  ? '정답! 모든 업그레이드 선택 가능'
+                  : '오답... 선택지가 제한됩니다'}
+              </span>
+            </div>
+          )}
+
+          <p style={{ fontSize: 'clamp(12px, 1.2vw, 16px)', color: '#71717a', fontWeight: 500 }}>
+            {upgrades.length === 1
+              ? '업그레이드를 획득하세요'
+              : '업그레이드를 선택하세요'}
+          </p>
         </div>
 
         {/* Upgrade Cards */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${Math.min(upgrades.length, 3)}, 1fr)`,
-          gap: 'clamp(8px, 1.5vw, 20px)',
+          gap: 'clamp(12px, 2vw, 24px)',
+          justifyContent: 'center',
         }}>
-          {upgrades.map((upgrade, index) => (
-            <button
-              key={`${upgrade.type}-${upgrade.id}`}
-              onClick={() => onSelect(upgrade.type, upgrade.id)}
-              style={{
-                ...getCardStyle(upgrade),
-                border: '2px solid',
-                borderRadius: '16px',
-                padding: 'clamp(14px, 2vw, 28px)',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                animation: `pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)`,
-                animationDelay: `${index * 0.1}s`,
-                animationFillMode: 'both',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-6px) scale(1.03)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = ''; }}
-            >
-              {/* Rarity Badge */}
-              <span className="pixel-badge" style={{
-                background: `${rarityColors[getRarity(upgrade)]}22`,
-                color: rarityColors[getRarity(upgrade)],
-                fontSize: 'clamp(5px, 0.55vw, 7px)',
-                marginBottom: 'clamp(6px, 0.8vw, 12px)',
-                display: 'inline-block',
-              }}>
-                {rarityLabels[getRarity(upgrade)]}
-              </span>
+          {upgrades.map((upgrade, index) => {
+            const rarity = getRarity(upgrade);
+            const config = rarityConfig[rarity];
 
-              {/* Icon */}
-              <div style={{ fontSize: 'clamp(28px, 3.5vw, 48px)', margin: 'clamp(6px, 1vw, 14px) 0' }}>
-                {upgrade.icon || '⚡'}
-              </div>
-
-              {/* Name */}
-              <p className="font-pixel" style={{ fontSize: 'clamp(7px, 0.85vw, 11px)', color: '#fff', marginBottom: 'clamp(4px, 0.5vw, 8px)' }}>
-                {upgrade.name}
-              </p>
-
-              {/* Description */}
-              <p className="font-pixel" style={{ fontSize: 'clamp(5px, 0.6vw, 8px)', color: '#b8b5c8', lineHeight: 2 }}>
-                {upgrade.description}
-              </p>
-
-              {/* Level Dots */}
-              {upgrade.currentLevel !== undefined && (
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '3px', marginTop: 'clamp(6px, 0.8vw, 12px)' }}>
-                  {Array.from({ length: upgrade.maxLevel || 5 }).map((_, i) => (
-                    <div key={i} style={{
-                      width: 'clamp(4px, 0.5vw, 8px)',
-                      height: 'clamp(4px, 0.5vw, 8px)',
-                      borderRadius: '50%',
-                      background: i <= (upgrade.currentLevel || 0) ? '#9b59b6' : 'rgba(255,255,255,0.15)',
-                    }} />
-                  ))}
+            return (
+              <button
+                key={`${upgrade.type}-${upgrade.id}`}
+                onClick={() => onSelect(upgrade.type, upgrade.id)}
+                className="animate-scale-in"
+                style={{
+                  ...getCardStyle(upgrade),
+                  border: '1px solid',
+                  borderRadius: 20,
+                  padding: 'clamp(20px, 3vw, 36px) clamp(16px, 2vw, 24px)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                  animationDelay: `${index * 0.1}s`,
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                  e.currentTarget.style.boxShadow = `0 20px 40px -12px ${config.color}30`;
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = '';
+                  e.currentTarget.style.boxShadow = '';
+                }}
+              >
+                {/* Rarity Badge */}
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '6px 12px',
+                  borderRadius: 999,
+                  background: `${config.color}15`,
+                  border: `1px solid ${config.color}30`,
+                  marginBottom: 16,
+                }}>
+                  <div style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: config.color,
+                  }} />
+                  <span style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: config.color,
+                  }}>
+                    {config.label}
+                  </span>
                 </div>
-              )}
-            </button>
-          ))}
+
+                {/* Icon */}
+                <div style={{
+                  fontSize: 'clamp(36px, 4.5vw, 56px)',
+                  margin: '12px 0 16px',
+                }}>
+                  {upgrade.icon || '⚡'}
+                </div>
+
+                {/* Name */}
+                <p style={{
+                  fontSize: 'clamp(14px, 1.4vw, 18px)',
+                  fontWeight: 700,
+                  color: '#fafafa',
+                  marginBottom: 8,
+                }}>
+                  {upgrade.name}
+                </p>
+
+                {/* Description */}
+                <p style={{
+                  fontSize: 'clamp(11px, 1vw, 14px)',
+                  color: '#a1a1aa',
+                  lineHeight: 1.6,
+                }}>
+                  {upgrade.description}
+                </p>
+
+                {/* Level Dots */}
+                {upgrade.currentLevel !== undefined && (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: 6,
+                    marginTop: 16,
+                  }}>
+                    {Array.from({ length: upgrade.maxLevel || 5 }).map((_, i) => (
+                      <div key={i} style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: i <= (upgrade.currentLevel || 0)
+                          ? '#6366f1'
+                          : 'rgba(255, 255, 255, 0.1)',
+                        transition: 'background 0.2s ease',
+                      }} />
+                    ))}
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

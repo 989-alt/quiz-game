@@ -27,17 +27,17 @@ export class GameScene extends Phaser.Scene {
   private waveTimer: number = 0;
   private stateUpdateTimer: number = 0;
 
-  private worldBounds = { width: 2000, height: 2000 };
+  private background!: Phaser.GameObjects.TileSprite;
 
   constructor() {
     super({ key: 'GameScene' });
   }
 
   create(): void {
-    // Set world bounds
-    this.physics.world.setBounds(0, 0, this.worldBounds.width, this.worldBounds.height);
+    // Remove world bounds constraints
+    this.physics.world.setBounds(0, 0, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
 
-    // Create background grid
+    // Create infinite background
     this.createBackground();
 
     // Create groups
@@ -45,16 +45,30 @@ export class GameScene extends Phaser.Scene {
     this.xpGems = this.physics.add.group({ classType: XPGem });
     this.projectiles = this.physics.add.group();
 
-    // Create player at center
-    this.player = new Player(
-      this,
-      this.worldBounds.width / 2,
-      this.worldBounds.height / 2
-    );
+    // Check for textures and create fallbacks if needed
+    if (!this.textures.exists('player')) {
+      const g = this.make.graphics({ x: 0, y: 0 }, false);
+      g.fillStyle(0x00ff00);
+      g.fillRect(0, 0, 32, 32);
+      g.generateTexture('player', 32, 32);
+      g.destroy();
+    }
+
+    if (!this.textures.exists('monster_basic')) {
+      const g = this.make.graphics({ x: 0, y: 0 }, false);
+      g.fillStyle(0xff0000);
+      g.fillRect(0, 0, 32, 32);
+      g.generateTexture('monster_basic', 32, 32);
+      g.destroy();
+    }
+
+    // Create player at startup center
+    const centerX = this.scale.width / 2;
+    const centerY = this.scale.height / 2;
+    this.player = new Player(this, centerX, centerY);
 
     // Setup camera
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-    this.cameras.main.setBounds(0, 0, this.worldBounds.width, this.worldBounds.height);
 
     // Create weapon manager and give starting weapon
     this.weaponManager = new WeaponManager(this, this.player);
@@ -74,25 +88,44 @@ export class GameScene extends Phaser.Scene {
   }
 
   private createBackground(): void {
-    const gridSize = 64;
-    const graphics = this.add.graphics();
+    // Create a texture for the grid tile if it doesn't exist
+    if (!this.textures.exists('grid-tile')) {
+      const gridSize = 64;
+      const graphics = this.make.graphics({ x: 0, y: 0 }, false);
 
-    graphics.lineStyle(1, 0x333344, 0.5);
+      // New clean dot-based background
+      graphics.fillStyle(0x0a0a0f, 1);
+      graphics.fillRect(0, 0, gridSize, gridSize);
 
-    for (let x = 0; x <= this.worldBounds.width; x += gridSize) {
-      graphics.moveTo(x, 0);
-      graphics.lineTo(x, this.worldBounds.height);
+      // Subtle grid line
+      graphics.lineStyle(1, 0x1a1a24, 0.4);
+      graphics.strokeRect(0, 0, gridSize, gridSize);
+
+      // Add dots for texture (matching the dot-grid aesthetic)
+      graphics.fillStyle(0x6366f1, 0.08);
+      graphics.fillCircle(32, 32, 2);
+
+      graphics.generateTexture('grid-tile', gridSize, gridSize);
     }
 
-    for (let y = 0; y <= this.worldBounds.height; y += gridSize) {
-      graphics.moveTo(0, y);
-      graphics.lineTo(this.worldBounds.width, y);
-    }
+    // Create tile sprite that covers the screen
+    this.background = this.add.tileSprite(
+      0, 0,
+      this.scale.width,
+      this.scale.height,
+      'grid-tile'
+    );
+    this.background.setOrigin(0, 0);
+    this.background.setScrollFactor(0); // Fix to camera
+    this.background.setDepth(-1);
 
-    graphics.strokePath();
-    graphics.setDepth(0);
+    // Resize background on window resize
+    this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
+      this.background.setSize(gameSize.width, gameSize.height);
+    });
   }
 
+  // ... (setupCollisions, handlePlayerMonsterCollision, etc. remain the same) ...
   private setupCollisions(): void {
     // Player vs Monsters
     this.physics.add.overlap(
@@ -219,6 +252,9 @@ export class GameScene extends Phaser.Scene {
     // Update survival time
     this.survivalTime += delta / 1000;
 
+    // Update background scroll position based on camera
+    this.background.setTilePosition(this.cameras.main.scrollX, this.cameras.main.scrollY);
+
     // Update player
     this.player.update();
 
@@ -236,6 +272,9 @@ export class GameScene extends Phaser.Scene {
     // Spawn monsters
     this.updateMonsterSpawning(delta);
 
+    // Cleanup distant entities
+    this.cleanupEntities();
+
     // Update wave
     this.updateWave(delta);
 
@@ -247,6 +286,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  // ... (updateXpGemAttraction remains the same) ...
   private updateXpGemAttraction(): void {
     const attractRange = this.player.getPickupRange() * 2;
 
@@ -281,34 +321,19 @@ export class GameScene extends Phaser.Scene {
   }
 
   private spawnMonster(): void {
-    // Spawn outside camera view
+    // Spawn just outside camera view
     const camera = this.cameras.main;
-    const margin = 100;
+    const padding = 100; // Extra padding outside camera
 
-    let x: number, y: number;
-    const side = Phaser.Math.Between(0, 3);
+    // Random angle and distance from player
+    // This creates a circle around the player for spawning, ensuring monsters come from all directions
+    const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+    // Distance should be at least half the diagonal of screen + padding
+    const minDistance = Math.sqrt(Math.pow(camera.width, 2) + Math.pow(camera.height, 2)) / 2 + padding;
+    const distance = minDistance + Phaser.Math.Between(0, 100);
 
-    switch (side) {
-      case 0: // Top
-        x = Phaser.Math.Between(camera.scrollX - margin, camera.scrollX + camera.width + margin);
-        y = camera.scrollY - margin;
-        break;
-      case 1: // Right
-        x = camera.scrollX + camera.width + margin;
-        y = Phaser.Math.Between(camera.scrollY - margin, camera.scrollY + camera.height + margin);
-        break;
-      case 2: // Bottom
-        x = Phaser.Math.Between(camera.scrollX - margin, camera.scrollX + camera.width + margin);
-        y = camera.scrollY + camera.height + margin;
-        break;
-      default: // Left
-        x = camera.scrollX - margin;
-        y = Phaser.Math.Between(camera.scrollY - margin, camera.scrollY + camera.height + margin);
-    }
-
-    // Clamp to world bounds
-    x = Phaser.Math.Clamp(x, 50, this.worldBounds.width - 50);
-    y = Phaser.Math.Clamp(y, 50, this.worldBounds.height - 50);
+    const x = this.player.x + Math.cos(angle) * distance;
+    const y = this.player.y + Math.sin(angle) * distance;
 
     // Choose monster type based on wave
     let monsterType = 'basic';
@@ -333,6 +358,35 @@ export class GameScene extends Phaser.Scene {
     this.monsters.add(monster);
   }
 
+  private cleanupEntities(): void {
+    const cleanupDistance = 2000; // Entities further than this from player are removed
+    const playerPos = new Phaser.Math.Vector2(this.player.x, this.player.y);
+
+    // Cleanup monsters
+    this.monsters.getChildren().forEach((monster) => {
+      const m = monster as Monster;
+      if (m.active && Phaser.Math.Distance.BetweenPoints(playerPos, new Phaser.Math.Vector2(m.x, m.y)) > cleanupDistance) {
+        m.destroy();
+      }
+    });
+
+    // Cleanup gems
+    this.xpGems.getChildren().forEach((gem) => {
+      const g = gem as XPGem;
+      if (g.active && Phaser.Math.Distance.BetweenPoints(playerPos, new Phaser.Math.Vector2(g.x, g.y)) > cleanupDistance) {
+        g.destroy();
+      }
+    });
+
+    // Cleanup projectiles (usually handle own destruction, but safety check)
+    this.projectiles.getChildren().forEach((proj) => {
+      const p = proj as Phaser.Physics.Arcade.Sprite;
+      if (p.active && Phaser.Math.Distance.BetweenPoints(playerPos, new Phaser.Math.Vector2(p.x, p.y)) > cleanupDistance) {
+        p.destroy();
+      }
+    });
+  }
+
   private updateWave(delta: number): void {
     this.waveTimer += delta;
 
@@ -350,10 +404,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   private spawnBossWave(): void {
-    for (let i = 0; i < this.currentWave / 5; i++) {
+    // Boss wave spawning around player
+    const count = Math.floor(this.currentWave / 5);
+
+    for (let i = 0; i < count; i++) {
       this.time.delayedCall(i * 500, () => {
         const angle = Math.random() * Math.PI * 2;
-        const dist = 400;
+        const dist = 500;
         const x = this.player.x + Math.cos(angle) * dist;
         const y = this.player.y + Math.sin(angle) * dist;
 
@@ -362,8 +419,8 @@ export class GameScene extends Phaser.Scene {
 
         const monster = new Monster(
           this,
-          Phaser.Math.Clamp(x, 50, this.worldBounds.width - 50),
-          Phaser.Math.Clamp(y, 50, this.worldBounds.height - 50),
+          x,
+          y,
           config
         );
         monster.setTarget(this.player);
@@ -372,6 +429,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  // ... (addXp, levelUp, getUpgradeInfo, emitPlayerState, public methods, shutdown remain the same) ...
   private addXp(amount: number): void {
     const growthBonus = 1 + this.player.growth;
     this.playerXp += Math.floor(amount * growthBonus);

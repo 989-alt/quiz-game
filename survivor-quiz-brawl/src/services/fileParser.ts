@@ -3,8 +3,8 @@ import type { TextItem } from 'pdfjs-dist/types/src/display/api';
 import JSZip from 'jszip';
 import type { FileParseResult, FileParseProgress } from '../types/quiz';
 
-// PDF.js worker 설정 - unpkg CDN 사용 (CORS 지원)
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+// PDF.js worker 설정 - v3.x CDN
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const LARGE_FILE_THRESHOLD = 10 * 1024 * 1024; // 10MB

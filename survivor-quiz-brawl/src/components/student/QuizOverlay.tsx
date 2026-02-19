@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Timer } from '../shared/Timer';
 import type { Quiz } from '../../types/quiz';
 
@@ -14,7 +14,7 @@ export function QuizOverlay({ quiz, timeLimit, onAnswer }: QuizOverlayProps) {
   const [showResult, setShowResult] = useState(false);
 
   const optionLabels = ['A', 'B', 'C', 'D'];
-  const optionColors = ['#e84393', '#3498db', '#fdcb6e', '#00b894'];
+  const optionColors = ['#f43f5e', '#6366f1', '#f59e0b', '#10b981'];
 
   const handleSelect = useCallback((index: number) => {
     if (isAnswered) return;
@@ -38,27 +38,27 @@ export function QuizOverlay({ quiz, timeLimit, onAnswer }: QuizOverlayProps) {
   const getOptionStyle = (index: number): React.CSSProperties => {
     if (!isAnswered) {
       return {
-        background: 'rgba(255,255,255,0.05)',
-        border: '2px solid rgba(255,255,255,0.1)',
+        background: 'rgba(255, 255, 255, 0.03)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
       };
     }
     if (index === quiz.correctIndex) {
       return {
-        background: 'rgba(0,184,148,0.2)',
-        border: '2px solid rgba(0,184,148,0.6)',
-        boxShadow: '0 0 20px rgba(0,184,148,0.3)',
+        background: 'rgba(16, 185, 129, 0.15)',
+        border: '1px solid rgba(16, 185, 129, 0.5)',
+        boxShadow: '0 0 24px rgba(16, 185, 129, 0.2)',
       };
     }
     if (index === selectedIndex) {
       return {
-        background: 'rgba(214,48,49,0.2)',
-        border: '2px solid rgba(214,48,49,0.6)',
+        background: 'rgba(244, 63, 94, 0.15)',
+        border: '1px solid rgba(244, 63, 94, 0.5)',
       };
     }
     return {
-      background: 'rgba(255,255,255,0.03)',
-      border: '2px solid rgba(255,255,255,0.05)',
-      opacity: 0.5,
+      background: 'rgba(255, 255, 255, 0.02)',
+      border: '1px solid rgba(255, 255, 255, 0.04)',
+      opacity: 0.4,
     };
   };
 
@@ -69,36 +69,43 @@ export function QuizOverlay({ quiz, timeLimit, onAnswer }: QuizOverlayProps) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'rgba(0,0,0,0.8)',
-      backdropFilter: 'blur(6px)',
+      background: 'rgba(10, 10, 15, 0.9)',
+      backdropFilter: 'blur(8px)',
       zIndex: 50,
-      padding: 'clamp(12px, 3vw, 40px)',
+      padding: 'clamp(16px, 4vw, 48px)',
     }}>
-      <div style={{
-        width: '100%',
-        maxWidth: 'clamp(360px, 50vw, 680px)',
-        animation: 'pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-      }}>
+      <div
+        className="animate-scale-in"
+        style={{
+          width: '100%',
+          maxWidth: 'clamp(380px, 55vw, 720px)',
+        }}
+      >
         {/* Timer */}
-        <div style={{ marginBottom: 'clamp(10px, 1.5vw, 20px)' }}>
+        <div style={{ marginBottom: 'clamp(16px, 2.5vw, 28px)' }}>
           <Timer duration={timeLimit} onComplete={handleTimeUp} isRunning={!isAnswered} size="md" />
         </div>
 
         {/* Question */}
-        <div style={{
-          padding: 'clamp(12px, 2vw, 24px)',
-          borderRadius: '14px',
-          background: 'rgba(255,255,255,0.06)',
-          border: '2px solid rgba(255,255,255,0.1)',
-          marginBottom: 'clamp(12px, 2vw, 24px)',
-        }}>
-          <h2 className="font-pixel" style={{ fontSize: 'clamp(8px, 1.1vw, 14px)', color: '#fff', lineHeight: 2 }}>
+        <div
+          className="glass-panel"
+          style={{
+            padding: 'clamp(20px, 3vw, 32px)',
+            marginBottom: 'clamp(16px, 2.5vw, 28px)',
+          }}
+        >
+          <h2 style={{
+            fontSize: 'clamp(14px, 1.6vw, 20px)',
+            fontWeight: 600,
+            color: '#fafafa',
+            lineHeight: 1.7,
+          }}>
             {quiz.question}
           </h2>
         </div>
 
         {/* Options */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'clamp(6px, 0.8vw, 12px)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
           {quiz.options.map((option, index) => (
             <button
               key={index}
@@ -106,24 +113,41 @@ export function QuizOverlay({ quiz, timeLimit, onAnswer }: QuizOverlayProps) {
               disabled={isAnswered}
               style={{
                 ...getOptionStyle(index),
-                padding: 'clamp(10px, 1.5vw, 18px) clamp(12px, 1.8vw, 22px)',
-                borderRadius: '12px',
+                padding: 'clamp(14px, 2vw, 22px) clamp(18px, 2.5vw, 28px)',
+                borderRadius: 14,
                 textAlign: 'left',
                 cursor: isAnswered ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s',
+                transition: 'all 0.25s ease',
                 display: 'flex',
                 alignItems: 'center',
+                gap: 14,
               }}
             >
-              <span className="font-pixel" style={{
-                fontSize: 'clamp(8px, 1vw, 12px)',
-                color: optionColors[index],
-                marginRight: 'clamp(6px, 0.8vw, 12px)',
-                fontWeight: 'bold',
+              {/* Option dot indicator */}
+              <div style={{
+                width: 28,
+                height: 28,
+                borderRadius: 8,
+                background: `${optionColors[index]}20`,
+                border: `2px solid ${optionColors[index]}50`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
               }}>
-                {optionLabels[index]}.
-              </span>
-              <span className="font-pixel" style={{ fontSize: 'clamp(7px, 0.85vw, 11px)', color: '#fff' }}>
+                <span style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: optionColors[index],
+                }}>
+                  {optionLabels[index]}
+                </span>
+              </div>
+              <span style={{
+                fontSize: 'clamp(13px, 1.3vw, 16px)',
+                fontWeight: 500,
+                color: '#e4e4e7',
+              }}>
                 {option}
               </span>
             </button>
@@ -132,20 +156,42 @@ export function QuizOverlay({ quiz, timeLimit, onAnswer }: QuizOverlayProps) {
 
         {/* Result */}
         {showResult && (
-          <div style={{
-            marginTop: 'clamp(10px, 1.5vw, 20px)',
-            padding: 'clamp(10px, 1.5vw, 18px)',
-            borderRadius: '12px',
-            textAlign: 'center',
-            background: selectedIndex === quiz.correctIndex ? 'rgba(0,184,148,0.15)' : 'rgba(214,48,49,0.15)',
-            border: `1px solid ${selectedIndex === quiz.correctIndex ? 'rgba(0,184,148,0.4)' : 'rgba(214,48,49,0.4)'}`,
-            animation: 'slide-up 0.3s ease-out',
-          }}>
-            <p className="font-pixel" style={{ fontSize: 'clamp(10px, 1.4vw, 18px)', color: selectedIndex === quiz.correctIndex ? '#55efc4' : '#ff7675' }}>
-              {selectedIndex === quiz.correctIndex ? '🎉 정답!' : '😢 오답!'}
-            </p>
+          <div
+            className="animate-slide-up"
+            style={{
+              marginTop: 'clamp(16px, 2.5vw, 28px)',
+              padding: 'clamp(16px, 2vw, 24px)',
+              borderRadius: 16,
+              textAlign: 'center',
+              background: selectedIndex === quiz.correctIndex
+                ? 'rgba(16, 185, 129, 0.1)'
+                : 'rgba(244, 63, 94, 0.1)',
+              border: `1px solid ${selectedIndex === quiz.correctIndex
+                ? 'rgba(16, 185, 129, 0.3)'
+                : 'rgba(244, 63, 94, 0.3)'}`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
+              <div style={{
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                background: selectedIndex === quiz.correctIndex ? '#10b981' : '#f43f5e',
+              }} />
+              <p style={{
+                fontSize: 'clamp(16px, 2vw, 24px)',
+                fontWeight: 700,
+                color: selectedIndex === quiz.correctIndex ? '#6ee7b7' : '#fda4af',
+              }}>
+                {selectedIndex === quiz.correctIndex ? '정답입니다!' : '오답입니다'}
+              </p>
+            </div>
             {quiz.explanation && (
-              <p className="font-pixel" style={{ fontSize: 'clamp(6px, 0.7vw, 9px)', color: '#b8b5c8', marginTop: 'clamp(4px, 0.5vw, 8px)', lineHeight: 2 }}>
+              <p style={{
+                fontSize: 'clamp(12px, 1vw, 14px)',
+                color: '#a1a1aa',
+                lineHeight: 1.7,
+              }}>
                 {quiz.explanation}
               </p>
             )}
