@@ -36,7 +36,7 @@ export async function generateQuizzes(
 ): Promise<QuizGenerationResponse> {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = QUIZ_GENERATION_PROMPT
       .replace('{count}', request.count.toString())

@@ -31,8 +31,8 @@ export abstract class WeaponBase {
   abstract description: string;
   abstract descriptionKo: string;
   abstract maxLevel: number;
-  abstract evolutionPair?: string;
-  abstract evolvedForm?: string;
+  evolutionPair?: string;
+  evolvedForm?: string;
 
   protected scene: GameScene;
   protected player: Player;
@@ -259,7 +259,7 @@ export abstract class WeaponBase {
     return inRange[Math.floor(Math.random() * inRange.length)];
   }
 
-  getInfo(): { id: string; name: string; nameKo: string; description: string; descriptionKo: string; level: number; maxLevel: number } {
+  getInfo(): { id: string; name: string; nameKo: string; description: string; descriptionKo: string; level: number; maxLevel: number; evolutionPair?: string } {
     return {
       id: this.id,
       name: this.name,
@@ -268,6 +268,7 @@ export abstract class WeaponBase {
       descriptionKo: this.descriptionKo,
       level: this.level,
       maxLevel: this.maxLevel,
+      evolutionPair: this.evolutionPair,
     };
   }
 }

@@ -25,7 +25,8 @@ import { Bone } from './weapons/Bone';
 import { Cherry } from './weapons/Cherry';
 
 // Import passives
-import { PassiveManager, PassiveId } from './PassiveManager';
+import { PassiveManager } from './PassiveManager';
+import type { PassiveId } from './PassiveManager';
 
 export type WeaponId =
   | 'whip' | 'magic_wand' | 'knife' | 'axe' | 'cross'

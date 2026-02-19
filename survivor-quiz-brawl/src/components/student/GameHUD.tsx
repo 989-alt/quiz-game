@@ -1,88 +1,113 @@
 import React from 'react';
+import { useGameStore } from '../../stores/gameStore';
 
-interface GameHUDProps {
-  hp: number;
-  maxHp: number;
-  level: number;
-  xp: number;
-  xpToNext: number;
-  score: number;
-  survivalTime: number;
-  wave: number;
-  playerName: string;
-}
+export function GameHUD() {
+  const { player, survivalTime, monstersKilled } = useGameStore();
+  const { hp: playerHP, maxHp: playerMaxHP, xp: playerXP, xpToNext: playerMaxXP, level: playerLevel, score } = player;
 
-export function GameHUD({
-  hp,
-  maxHp,
-  level,
-  xp,
-  xpToNext,
-  score,
-  survivalTime,
-  wave,
-  playerName,
-}: GameHUDProps) {
-  const hpPercent = (hp / maxHp) * 100;
-  const xpPercent = (xp / xpToNext) * 100;
+  const hpPercent = Math.max(0, (playerHP / playerMaxHP) * 100);
+  const xpPercent = Math.max(0, (playerXP / playerMaxXP) * 100);
+
+  const hpColor = hpPercent > 50 ? '#00b894' : hpPercent > 25 ? '#fdcb6e' : '#d63031';
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   return (
-    <div className="absolute inset-x-0 top-0 p-4 pointer-events-none">
-      {/* Top Bar */}
-      <div className="flex justify-between items-start">
-        {/* Left: Player Info */}
-        <div className="bg-black/70 rounded-lg p-3 min-w-[200px]">
-          <div className="text-white font-pixel text-xs mb-2">{playerName}</div>
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: 'clamp(6px, 1vw, 14px)',
+      pointerEvents: 'none',
+    }}>
 
-          {/* HP Bar */}
-          <div className="mb-2">
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-red-400 font-pixel">HP</span>
-              <span className="text-white font-pixel">{Math.ceil(hp)}/{maxHp}</span>
-            </div>
-            <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
-              <div
-                className={`h-full transition-all duration-300 ${
-                  hpPercent > 50 ? 'bg-green-500' : hpPercent > 25 ? 'bg-yellow-500' : 'bg-red-500'
-                }`}
-                style={{ width: `${hpPercent}%` }}
-              />
-            </div>
+      {/* Left: Player Info */}
+      <div style={{
+        borderRadius: 'clamp(8px, 1vw, 14px)',
+        padding: 'clamp(8px, 1.2vw, 16px)',
+        minWidth: 'clamp(140px, 18vw, 260px)',
+        background: 'rgba(10, 14, 26, 0.85)',
+        border: '2px solid rgba(255,255,255,0.1)',
+        backdropFilter: 'blur(8px)',
+      }}>
+        {/* Player Name + Level */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(4px, 0.5vw, 8px)', marginBottom: 'clamp(6px, 0.8vw, 10px)' }}>
+          <span style={{
+            padding: 'clamp(2px, 0.3vw, 4px) clamp(4px, 0.5vw, 8px)',
+            borderRadius: '6px',
+            fontSize: 'clamp(6px, 0.7vw, 9px)',
+            fontFamily: "'Press Start 2P', monospace",
+            background: 'linear-gradient(135deg, #9b59b6, #e84393)',
+            color: '#fff',
+          }}>
+            Lv.{playerLevel}
+          </span>
+          <span className="font-pixel" style={{ fontSize: 'clamp(6px, 0.7vw, 9px)', color: '#fff' }}>Player</span>
+        </div>
+
+        {/* HP Bar */}
+        <div style={{ marginBottom: 'clamp(4px, 0.5vw, 8px)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+            <span className="font-pixel" style={{ fontSize: 'clamp(5px, 0.55vw, 7px)', color: hpColor }}>❤️ HP</span>
+            <span className="font-pixel" style={{ fontSize: 'clamp(5px, 0.55vw, 7px)', color: '#b8b5c8' }}>{playerHP}/{playerMaxHP}</span>
           </div>
-
-          {/* XP Bar */}
-          <div>
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-blue-400 font-pixel">LV {level}</span>
-              <span className="text-white font-pixel">{xp}/{xpToNext}</span>
-            </div>
-            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-blue-500 transition-all duration-300"
-                style={{ width: `${xpPercent}%` }}
-              />
-            </div>
+          <div style={{ width: '100%', height: 'clamp(6px, 0.7vw, 10px)', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', overflow: 'hidden' }}>
+            <div style={{
+              width: `${hpPercent}%`,
+              height: '100%',
+              borderRadius: '999px',
+              background: `linear-gradient(90deg, ${hpColor}, ${hpColor}88)`,
+              transition: 'width 0.3s ease',
+              animation: hpPercent <= 25 ? 'pulse-glow 0.5s ease-in-out infinite' : 'none',
+            }} />
           </div>
         </div>
 
-        {/* Right: Stats */}
-        <div className="bg-black/70 rounded-lg p-3 text-right">
-          <div className="text-yellow-400 font-pixel text-lg mb-1">
-            {score.toLocaleString()}
+        {/* XP Bar */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+            <span className="font-pixel" style={{ fontSize: 'clamp(5px, 0.55vw, 7px)', color: '#74b9ff' }}>⭐ XP</span>
+            <span className="font-pixel" style={{ fontSize: 'clamp(5px, 0.55vw, 7px)', color: '#b8b5c8' }}>{playerXP}/{playerMaxXP}</span>
           </div>
-          <div className="text-white font-pixel text-xs">
-            Wave {wave}
-          </div>
-          <div className="text-gray-400 font-pixel text-xs">
-            {formatTime(survivalTime)}
+          <div style={{ width: '100%', height: 'clamp(6px, 0.7vw, 10px)', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', overflow: 'hidden' }}>
+            <div style={{
+              width: `${xpPercent}%`,
+              height: '100%',
+              borderRadius: '999px',
+              background: 'linear-gradient(90deg, #3498db, #74b9ff)',
+              transition: 'width 0.3s ease',
+            }} />
           </div>
         </div>
+      </div>
+
+      {/* Right: Score & Stats */}
+      <div style={{
+        borderRadius: 'clamp(8px, 1vw, 14px)',
+        padding: 'clamp(8px, 1.2vw, 16px)',
+        textAlign: 'right',
+        background: 'rgba(10, 14, 26, 0.85)',
+        border: '2px solid rgba(255,255,255,0.1)',
+        backdropFilter: 'blur(8px)',
+      }}>
+        <p className="font-pixel" style={{
+          fontSize: 'clamp(10px, 1.4vw, 18px)',
+          color: '#fdcb6e',
+          textShadow: '0 2px 0 #b8860b',
+          marginBottom: 'clamp(4px, 0.5vw, 8px)',
+        }}>
+          {score.toLocaleString()}
+        </p>
+        <p className="font-pixel" style={{ fontSize: 'clamp(5px, 0.6vw, 8px)', color: '#b8b5c8', marginBottom: 'clamp(2px, 0.3vw, 4px)' }}>
+          💀 {monstersKilled} kills
+        </p>
+        <p className="font-pixel" style={{ fontSize: 'clamp(5px, 0.6vw, 8px)', color: '#6c6783' }}>
+          ⏱️ {formatTime(survivalTime)}
+        </p>
       </div>
     </div>
   );

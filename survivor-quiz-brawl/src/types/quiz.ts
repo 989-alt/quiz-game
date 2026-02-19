@@ -37,6 +37,22 @@ export interface QuizGenerationResponse {
   error?: string;
 }
 
+export interface FileParseResult {
+  success: boolean;
+  text?: string;
+  fileName?: string;
+  fileType?: 'pdf' | 'pptx' | 'txt' | 'md';
+  pageCount?: number;
+  error?: string;
+}
+
+export interface FileParseProgress {
+  stage: 'loading' | 'parsing' | 'extracting' | 'complete';
+  progress: number;
+  message: string;
+}
+
+/** @deprecated Use FileParseResult instead */
 export interface PDFParseResult {
   success: boolean;
   text?: string;

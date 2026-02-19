@@ -44,153 +44,157 @@ export function QRLobby({ quizSet, onGameStart }: QRLobbyProps) {
   const totalPlayers = currentRoom?.players.length || 0;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* QR Code & Join Info */}
-      <div className="bg-gray-800 rounded-lg p-6 border-2 border-gray-600">
-        <h3 className="text-white font-pixel text-lg mb-4 text-center">
-          학생 참여
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 'clamp(12px, 2vw, 28px)',
+      animation: 'slide-up 0.4s ease-out',
+    }}>
+
+      {/* Left: QR Code & Join Info */}
+      <div className="pixel-card" style={{ padding: 'clamp(16px, 3vw, 36px)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <h3 className="font-pixel" style={{ fontSize: 'clamp(8px, 1vw, 13px)', color: '#fdcb6e', marginBottom: 'clamp(16px, 2.5vw, 32px)', display: 'flex', alignItems: 'center', gap: 'clamp(4px, 0.5vw, 8px)' }}>
+          📱 학생 참여
         </h3>
 
         {currentRoom && (
           <>
             {/* Room Code */}
-            <div className="bg-gray-900 rounded-lg p-4 mb-4 text-center">
-              <p className="text-gray-400 font-pixel text-xs mb-2">방 코드</p>
-              <p className="text-4xl font-pixel text-pixel-gold tracking-widest">
+            <div style={{
+              width: '100%',
+              borderRadius: '16px',
+              padding: 'clamp(12px, 2vw, 24px)',
+              marginBottom: 'clamp(16px, 2.5vw, 28px)',
+              textAlign: 'center',
+              background: 'linear-gradient(135deg, rgba(155,89,182,0.15), rgba(232,67,147,0.08))',
+              border: '1px solid rgba(155,89,182,0.3)',
+            }}>
+              <p className="font-pixel" style={{ fontSize: 'clamp(6px, 0.7vw, 8px)', color: '#b8b5c8', marginBottom: '4px' }}>방 코드</p>
+              <p className="font-pixel" style={{
+                fontSize: 'clamp(20px, 3.5vw, 42px)',
+                letterSpacing: '0.3em',
+                color: '#fdcb6e',
+                textShadow: '0 3px 0 #b8860b, 0 0 20px rgba(253,203,110,0.3)',
+              }}>
                 {currentRoom.code}
               </p>
             </div>
 
             {/* QR Code */}
-            <div className="bg-white p-4 rounded-lg flex justify-center mb-4">
+            <div style={{ padding: 'clamp(12px, 2vw, 24px)', borderRadius: '16px', background: 'white', marginBottom: 'clamp(16px, 2.5vw, 28px)' }}>
               <QRCodeSVG
                 value={joinUrl}
-                size={200}
+                size={Math.min(window.innerWidth * 0.15, 180)}
                 level="M"
                 includeMargin={true}
               />
             </div>
 
             {/* Join URL */}
-            <div className="bg-gray-700 rounded p-3 mb-4">
-              <p className="text-gray-400 font-pixel text-xs mb-1">접속 URL</p>
-              <p className="text-white font-pixel text-xs break-all">
+            <div style={{
+              width: '100%',
+              borderRadius: '12px',
+              padding: 'clamp(8px, 1vw, 14px)',
+              marginBottom: 'clamp(12px, 1.5vw, 18px)',
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}>
+              <p className="font-pixel" style={{ fontSize: 'clamp(5px, 0.6vw, 7px)', color: '#6c6783', marginBottom: '2px' }}>접속 URL</p>
+              <p className="font-pixel" style={{ fontSize: 'clamp(5px, 0.65vw, 8px)', color: '#b8b5c8', wordBreak: 'break-all' }}>
                 {joinUrl}
               </p>
             </div>
 
-            {/* Copy Button */}
             <PixelButton
               onClick={() => navigator.clipboard.writeText(joinUrl)}
               variant="secondary"
               className="w-full"
             >
-              URL 복사
+              📋 URL 복사
             </PixelButton>
           </>
         )}
       </div>
 
-      {/* Settings & Players */}
-      <div className="space-y-6">
+      {/* Right: Settings & Players */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(12px, 2vw, 24px)' }}>
+
         {/* Game Settings */}
-        <div className="bg-gray-800 rounded-lg p-6 border-2 border-gray-600">
-          <h3 className="text-white font-pixel text-sm mb-4">게임 설정</h3>
+        <div className="pixel-card" style={{ padding: 'clamp(14px, 2vw, 28px)' }}>
+          <h3 className="font-pixel" style={{ fontSize: 'clamp(8px, 0.9vw, 12px)', color: '#fdcb6e', marginBottom: 'clamp(12px, 1.5vw, 20px)', display: 'flex', alignItems: 'center', gap: 'clamp(4px, 0.5vw, 8px)' }}>
+            ⚙️ 게임 설정
+          </h3>
 
-          <div className="space-y-4">
-            {/* Game Duration */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 1.5vw, 18px)' }}>
             <div>
-              <label className="block text-gray-400 font-pixel text-xs mb-2">
-                게임 시간: {Math.floor(settings.gameDuration / 60)}분
+              <label className="font-pixel" style={{ display: 'block', fontSize: 'clamp(6px, 0.75vw, 9px)', color: '#b8b5c8', marginBottom: 'clamp(4px, 0.5vw, 8px)' }}>
+                게임 시간: <span style={{ color: '#fdcb6e' }}>{Math.floor(settings.gameDuration / 60)}분</span>
               </label>
-              <input
-                type="range"
-                min={180}
-                max={600}
-                step={60}
-                value={settings.gameDuration}
+              <input type="range" min={180} max={600} step={60} value={settings.gameDuration}
                 onChange={(e) => setSettings({ ...settings, gameDuration: parseInt(e.target.value) })}
-                className="w-full"
-              />
+                style={{ width: '100%', accentColor: '#9b59b6' }} />
             </div>
-
-            {/* Quiz Time Limit */}
             <div>
-              <label className="block text-gray-400 font-pixel text-xs mb-2">
-                퀴즈 제한 시간: {settings.quizTimeLimit}초
+              <label className="font-pixel" style={{ display: 'block', fontSize: 'clamp(6px, 0.75vw, 9px)', color: '#b8b5c8', marginBottom: 'clamp(4px, 0.5vw, 8px)' }}>
+                퀴즈 제한 시간: <span style={{ color: '#fdcb6e' }}>{settings.quizTimeLimit}초</span>
               </label>
-              <input
-                type="range"
-                min={10}
-                max={30}
-                step={5}
-                value={settings.quizTimeLimit}
+              <input type="range" min={10} max={30} step={5} value={settings.quizTimeLimit}
                 onChange={(e) => setSettings({ ...settings, quizTimeLimit: parseInt(e.target.value) })}
-                className="w-full"
-              />
+                style={{ width: '100%', accentColor: '#9b59b6' }} />
             </div>
-
-            {/* Max Players */}
             <div>
-              <label className="block text-gray-400 font-pixel text-xs mb-2">
-                최대 인원: {settings.maxPlayers}명
+              <label className="font-pixel" style={{ display: 'block', fontSize: 'clamp(6px, 0.75vw, 9px)', color: '#b8b5c8', marginBottom: 'clamp(4px, 0.5vw, 8px)' }}>
+                최대 인원: <span style={{ color: '#fdcb6e' }}>{settings.maxPlayers}명</span>
               </label>
-              <input
-                type="range"
-                min={10}
-                max={50}
-                step={5}
-                value={settings.maxPlayers}
+              <input type="range" min={10} max={50} step={5} value={settings.maxPlayers}
                 onChange={(e) => setSettings({ ...settings, maxPlayers: parseInt(e.target.value) })}
-                className="w-full"
-              />
+                style={{ width: '100%', accentColor: '#9b59b6' }} />
             </div>
           </div>
         </div>
 
         {/* Player List */}
-        <div className="bg-gray-800 rounded-lg p-6 border-2 border-gray-600">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-white font-pixel text-sm">참여자</h3>
-            <span className="text-gray-400 font-pixel text-xs">
+        <div className="pixel-card" style={{ padding: 'clamp(14px, 2vw, 28px)', flex: 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'clamp(10px, 1.5vw, 18px)' }}>
+            <h3 className="font-pixel" style={{ fontSize: 'clamp(8px, 0.9vw, 12px)', color: '#fdcb6e', display: 'flex', alignItems: 'center', gap: 'clamp(4px, 0.5vw, 8px)' }}>
+              👥 참여자
+            </h3>
+            <span className="pixel-badge" style={{ background: 'rgba(0,184,148,0.15)', color: '#55efc4', fontSize: 'clamp(5px, 0.6vw, 8px)' }}>
               {readyPlayers}/{totalPlayers}명 준비
             </span>
           </div>
 
-          <div className="max-h-48 overflow-y-auto space-y-2">
+          <div style={{ maxHeight: 'clamp(120px, 18vh, 240px)', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'clamp(4px, 0.5vw, 8px)' }}>
             {currentRoom?.players.map((player) => (
-              <div
-                key={player.id}
-                className="flex justify-between items-center bg-gray-700 rounded px-3 py-2"
-              >
-                <span className="text-white font-pixel text-xs">
-                  {player.name}
-                </span>
-                <span className={`font-pixel text-xs ${
-                  player.isReady ? 'text-green-400' : 'text-yellow-400'
-                }`}>
-                  {player.isReady ? '준비완료' : '대기중'}
+              <div key={player.id} style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: 'clamp(6px, 0.8vw, 12px)',
+                borderRadius: '10px',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+              }}>
+                <span className="font-pixel" style={{ fontSize: 'clamp(6px, 0.75vw, 9px)', color: '#fff' }}>{player.name}</span>
+                <span className="pixel-badge" style={{
+                  background: player.isReady ? 'rgba(0,184,148,0.15)' : 'rgba(253,203,110,0.15)',
+                  color: player.isReady ? '#55efc4' : '#fdcb6e',
+                  fontSize: 'clamp(5px, 0.55vw, 7px)',
+                }}>
+                  {player.isReady ? '✅ 준비완료' : '⏳ 대기중'}
                 </span>
               </div>
             ))}
-
             {(!currentRoom || currentRoom.players.length === 0) && (
-              <p className="text-gray-500 font-pixel text-xs text-center py-4">
-                참여자를 기다리는 중...
-              </p>
+              <div style={{ textAlign: 'center', padding: 'clamp(20px, 4vw, 48px) 0' }}>
+                <span style={{ fontSize: 'clamp(24px, 3vw, 40px)', display: 'block', marginBottom: '8px', animation: 'bounce-slow 2s ease-in-out infinite' }}>👋</span>
+                <p className="font-pixel" style={{ fontSize: 'clamp(6px, 0.7vw, 9px)', color: '#6c6783' }}>참여자를 기다리는 중...</p>
+              </div>
             )}
           </div>
         </div>
 
         {/* Start Button */}
-        <PixelButton
-          onClick={handleStartGame}
-          disabled={totalPlayers < 1}
-          variant="success"
-          size="lg"
-          className="w-full"
-        >
-          게임 시작 ({totalPlayers}명)
+        <PixelButton onClick={handleStartGame} disabled={totalPlayers < 1} variant="success" size="lg" className="w-full">
+          🎮 게임 시작 ({totalPlayers}명)
         </PixelButton>
       </div>
     </div>

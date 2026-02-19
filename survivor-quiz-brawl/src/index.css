@@ -1,68 +1,493 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import "tailwindcss";
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+@theme {
+  /* === Cute Pixel Color Palette === */
+  --color-bg-primary: #1a1028;
+  --color-bg-secondary: #251740;
+  --color-bg-card: rgba(255, 255, 255, 0.06);
+  --color-bg-card-hover: rgba(255, 255, 255, 0.1);
+
+  --color-accent-purple: #9b59b6;
+  --color-accent-pink: #e84393;
+  --color-accent-blue: #3498db;
+  --color-accent-cyan: #00cec9;
+  --color-accent-green: #00b894;
+  --color-accent-yellow: #fdcb6e;
+  --color-accent-orange: #e17055;
+  --color-accent-red: #d63031;
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #b8b5c8;
+  --color-text-muted: #6c6783;
+
+  --font-pixel: 'Press Start 2P', monospace;
+
+  /* === Animations === */
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-bounce-slow: bounce-slow 2s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+  --animate-shake: shake 0.4s ease-in-out;
+  --animate-slide-up: slide-up 0.5s ease-out;
+  --animate-slide-down: slide-down 0.3s ease-out;
+  --animate-pop: pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --animate-sparkle: sparkle 1.5s ease-in-out infinite;
+  --animate-wiggle: wiggle 1s ease-in-out infinite;
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-12px);
+    }
+  }
+
+  @keyframes bounce-slow {
+
+    0%,
+    100% {
+      transform: translateY(0) scale(1);
+    }
+
+    50% {
+      transform: translateY(-8px) scale(1.02);
+    }
+  }
+
+  @keyframes pulse-glow {
+
+    0%,
+    100% {
+      opacity: 1;
+      filter: brightness(1);
+    }
+
+    50% {
+      opacity: 0.85;
+      filter: brightness(1.2);
+    }
+  }
+
+  @keyframes shake {
+
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+
+    20% {
+      transform: translateX(-4px) rotate(-1deg);
+    }
+
+    40% {
+      transform: translateX(4px) rotate(1deg);
+    }
+
+    60% {
+      transform: translateX(-3px) rotate(-0.5deg);
+    }
+
+    80% {
+      transform: translateX(3px) rotate(0.5deg);
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pop {
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes sparkle {
+
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scale(0.8);
+    }
+
+    50% {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
+
+  @keyframes wiggle {
+
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+
+    25% {
+      transform: rotate(-3deg);
+    }
+
+    75% {
+      transform: rotate(3deg);
+    }
+  }
+
+  @keyframes gradient-shift {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @keyframes star-twinkle {
+
+    0%,
+    100% {
+      opacity: 0.2;
+    }
+
+    50% {
+      opacity: 0.8;
+    }
+  }
+}
+
+/* ========== Global Reset & Base ========== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  background: linear-gradient(135deg, #1a1028 0%, #251740 40%, #1e1535 70%, #16102a 100%);
+  color: #ffffff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  line-height: 1.8;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* ========== Scrollbar ========== */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+::-webkit-scrollbar-track {
+  background: #1a1028;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #9b59b6, #e84393);
+  border-radius: 4px;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+::-webkit-scrollbar-thumb:hover {
+  background: #c471ed;
+}
+
+/* ========== Canvas ========== */
+canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* ========== Pixel Card ========== */
+.pixel-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.pixel-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* ========== Pixel Button Styles ========== */
+.btn-pixel {
+  font-family: 'Press Start 2P', monospace;
+  border: none;
+  border-radius: 12px;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.btn-pixel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.btn-pixel:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-pixel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn-purple {
+  background: linear-gradient(135deg, #9b59b6, #8e44ad);
+  color: white;
+  box-shadow: 0 4px 0 #6c3483, 0 6px 20px rgba(155, 89, 182, 0.3);
+}
+
+.btn-purple:hover {
+  background: linear-gradient(135deg, #a86cc1, #9b59b6);
+  box-shadow: 0 6px 0 #6c3483, 0 10px 30px rgba(155, 89, 182, 0.4);
+}
+
+.btn-blue {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  box-shadow: 0 4px 0 #1a5276, 0 6px 20px rgba(52, 152, 219, 0.3);
+}
+
+.btn-blue:hover {
+  background: linear-gradient(135deg, #5dade2, #3498db);
+  box-shadow: 0 6px 0 #1a5276, 0 10px 30px rgba(52, 152, 219, 0.4);
+}
+
+.btn-pink {
+  background: linear-gradient(135deg, #e84393, #d63384);
+  color: white;
+  box-shadow: 0 4px 0 #a71d5d, 0 6px 20px rgba(232, 67, 147, 0.3);
+}
+
+.btn-pink:hover {
+  background: linear-gradient(135deg, #fd79a8, #e84393);
+  box-shadow: 0 6px 0 #a71d5d, 0 10px 30px rgba(232, 67, 147, 0.4);
+}
+
+.btn-green {
+  background: linear-gradient(135deg, #00b894, #00a381);
+  color: white;
+  box-shadow: 0 4px 0 #007a5e, 0 6px 20px rgba(0, 184, 148, 0.3);
+}
+
+.btn-green:hover {
+  background: linear-gradient(135deg, #55efc4, #00b894);
+  box-shadow: 0 6px 0 #007a5e, 0 10px 30px rgba(0, 184, 148, 0.4);
+}
+
+.btn-orange {
+  background: linear-gradient(135deg, #e17055, #d35400);
+  color: white;
+  box-shadow: 0 4px 0 #a04000, 0 6px 20px rgba(225, 112, 85, 0.3);
+}
+
+.btn-red {
+  background: linear-gradient(135deg, #d63031, #c0392b);
+  color: white;
+  box-shadow: 0 4px 0 #922b21, 0 6px 20px rgba(214, 48, 49, 0.3);
+}
+
+/* ========== Pixel Input Styles ========== */
+.pixel-input {
+  font-family: 'Press Start 2P', monospace;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  color: white;
+  padding: 12px 16px;
+  font-size: 10px;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.pixel-input:focus {
+  border-color: #9b59b6;
+  background: rgba(155, 89, 182, 0.1);
+  box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.2);
+}
+
+.pixel-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ========== Background Stars ========== */
+.bg-stars {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bg-stars::before,
+.bg-stars::after {
+  content: '';
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: white;
+  border-radius: 50%;
+  box-shadow:
+    25px 50px 0 rgba(255, 255, 255, 0.3),
+    100px 120px 0 rgba(255, 255, 255, 0.2),
+    200px 80px 0 rgba(255, 255, 255, 0.4),
+    350px 200px 0 rgba(255, 255, 255, 0.15),
+    500px 100px 0 rgba(255, 255, 255, 0.3),
+    150px 300px 0 rgba(255, 255, 255, 0.25),
+    620px 250px 0 rgba(255, 255, 255, 0.2),
+    80px 400px 0 rgba(255, 255, 255, 0.35),
+    450px 350px 0 rgba(255, 255, 255, 0.15),
+    300px 450px 0 rgba(255, 255, 255, 0.2),
+    700px 50px 0 rgba(255, 255, 255, 0.3),
+    50px 550px 0 rgba(255, 255, 255, 0.2),
+    550px 450px 0 rgba(255, 255, 255, 0.25),
+    400px 500px 0 rgba(255, 255, 255, 0.1),
+    250px 150px 0 rgba(255, 255, 255, 0.35);
+  animation: star-twinkle 3s ease-in-out infinite;
+}
+
+.bg-stars::after {
+  left: 50px;
+  top: 30px;
+  animation-delay: 1.5s;
+  box-shadow:
+    75px 130px 0 rgba(255, 255, 255, 0.2),
+    180px 250px 0 rgba(255, 255, 255, 0.3),
+    330px 100px 0 rgba(255, 255, 255, 0.15),
+    480px 180px 0 rgba(255, 255, 255, 0.25),
+    600px 320px 0 rgba(255, 255, 255, 0.2),
+    120px 450px 0 rgba(255, 255, 255, 0.3),
+    700px 400px 0 rgba(255, 255, 255, 0.15),
+    50px 250px 0 rgba(255, 255, 255, 0.2),
+    380px 380px 0 rgba(255, 255, 255, 0.25),
+    520px 50px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* ========== Progress Bar ========== */
+.pixel-progress {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+  background-size: 20px 20px;
+}
+
+.pixel-progress-hp {
+  background: linear-gradient(90deg, #00b894, #55efc4);
+}
+
+.pixel-progress-hp.warning {
+  background: linear-gradient(90deg, #fdcb6e, #ffeaa7);
+}
+
+.pixel-progress-hp.danger {
+  background: linear-gradient(90deg, #d63031, #ff7675);
+  animation: pulse-glow 0.5s ease-in-out infinite;
+}
+
+.pixel-progress-xp {
+  background: linear-gradient(90deg, #3498db, #74b9ff);
+}
+
+/* ========== Badge ========== */
+.pixel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 7px;
+  font-family: 'Press Start 2P', monospace;
+  line-height: 1;
+}
+
+/* ========== Tab Navigation ========== */
+.pixel-tab {
+  font-family: 'Press Start 2P', monospace;
+  padding: 10px 20px;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.4);
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pixel-tab:hover {
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pixel-tab.active {
+  color: #fdcb6e;
+  border-bottom-color: #fdcb6e;
+  background: rgba(253, 203, 110, 0.05);
+}
+
+.pixel-tab:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ========== Floating Decorations ========== */
+.float-icon {
+  position: absolute;
+  font-size: 24px;
+  opacity: 0.15;
+  pointer-events: none;
+  animation: float 4s ease-in-out infinite;
 }

@@ -37,12 +37,9 @@ export function MobileControls({ onMove }: MobileControlsProps) {
     if (distance > 0) {
       normalizedX = (deltaX / distance) * clampedDistance;
       normalizedY = (deltaY / distance) * clampedDistance;
-
-      // Send normalized input (-1 to 1)
       onMove(normalizedX / maxDistance, normalizedY / maxDistance);
     }
 
-    // Update knob position
     knobRef.current.style.transform = `translate(${normalizedX}px, ${normalizedY}px)`;
   }, [onMove]);
 
@@ -90,12 +87,22 @@ export function MobileControls({ onMove }: MobileControlsProps) {
     <div className="absolute bottom-8 left-8 pointer-events-auto">
       <div
         ref={joystickRef}
-        className="w-32 h-32 rounded-full bg-gray-800/60 border-4 border-gray-600/60 flex items-center justify-center"
-        style={{ touchAction: 'none' }}
+        className="w-32 h-32 rounded-full flex items-center justify-center"
+        style={{
+          background: 'rgba(155, 89, 182, 0.15)',
+          border: '3px solid rgba(155, 89, 182, 0.3)',
+          backdropFilter: 'blur(4px)',
+          touchAction: 'none',
+        }}
       >
         <div
           ref={knobRef}
-          className="w-16 h-16 rounded-full bg-gray-400/80 border-2 border-white/50 shadow-lg transition-transform duration-75"
+          className="w-14 h-14 rounded-full transition-transform duration-75"
+          style={{
+            background: 'linear-gradient(135deg, rgba(155,89,182,0.6), rgba(232,67,147,0.6))',
+            border: '2px solid rgba(255,255,255,0.3)',
+            boxShadow: '0 4px 15px rgba(155,89,182,0.3)',
+          }}
         />
       </div>
     </div>

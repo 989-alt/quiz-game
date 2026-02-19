@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import { Monster, MonsterTypes } from '../entities/Monster';
 import { XPGem } from '../entities/XPGem';
-import { WeaponManager } from '../weapons/WeaponManager';
+import { WeaponManager, WeaponInfoList } from '../weapons/WeaponManager';
+import { PassiveInfoList } from '../weapons/PassiveManager';
 import { EventBus, GameEvents } from '../utils/EventBus';
 import { GAME_CONFIG } from '../config';
 
@@ -97,7 +98,7 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.overlap(
       this.player,
       this.monsters,
-      this.handlePlayerMonsterCollision,
+      this.handlePlayerMonsterCollision as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
       undefined,
       this
     );
@@ -106,7 +107,7 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.overlap(
       this.player,
       this.xpGems,
-      this.handlePlayerGemCollision,
+      this.handlePlayerGemCollision as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
       undefined,
       this
     );
@@ -115,7 +116,7 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.overlap(
       this.projectiles,
       this.monsters,
-      this.handleProjectileMonsterCollision,
+      this.handleProjectileMonsterCollision as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
       undefined,
       this
     );
@@ -423,7 +424,7 @@ export class GameScene extends Phaser.Scene {
         };
       }
       // New weapon
-      const { WeaponInfoList } = require('../weapons/WeaponManager');
+      // WeaponInfoList imported at top of file
       const weaponInfo = WeaponInfoList.find((w: any) => w.id === id);
       return {
         name: weaponInfo?.name || id,
@@ -434,7 +435,7 @@ export class GameScene extends Phaser.Scene {
         maxLevel: weaponInfo?.maxLevel || 8,
       };
     } else {
-      const { PassiveInfoList } = require('../weapons/PassiveManager');
+      // PassiveInfoList imported at top of file
       const passiveInfo = PassiveInfoList.find((p: any) => p.id === id);
       return {
         name: passiveInfo?.name || id,

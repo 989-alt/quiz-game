@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { FileUpload } from './FileUpload';
 import { QuizEditor } from './QuizEditor';
 import { QRLobby } from './QRLobby';
@@ -6,126 +6,175 @@ import { Leaderboard } from './Leaderboard';
 import { PixelButton } from '../shared/PixelButton';
 import { useQuizStore } from '../../stores/quizStore';
 import { useRoomStore } from '../../stores/roomStore';
+import type { QuizSet } from '../../types/quiz';
 
-type Tab = 'upload' | 'edit' | 'lobby' | 'game';
+type TeacherStep = 'create' | 'edit' | 'lobby' | 'game';
+
+const STEPS = [
+  { id: 'create' as const, label: '퀴즈 만들기', icon: '📝', num: 1 },
+  { id: 'edit' as const, label: '퀴즈 수정', icon: '✏️', num: 2 },
+  { id: 'lobby' as const, label: '서버 열기', icon: '🌐', num: 3 },
+  { id: 'game' as const, label: '게임 진행', icon: '🎮', num: 4 },
+];
 
 export function Dashboard() {
-  const [activeTab, setActiveTab] = useState<Tab>('upload');
-  const [apiKeyInput, setApiKeyInput] = useState('');
+  const { quizSets } = useQuizStore();
+  const { currentRoom } = useRoomStore();
+  const [currentStep, setCurrentStep] = useState<TeacherStep>('create');
+  const [selectedQuizSet, setSelectedQuizSet] = useState<QuizSet | null>(null);
+  const [geminiApiKey, setGeminiApiKey] = useState('');
 
-  const { quizSets, currentQuizSet, setCurrentQuizSet, geminiApiKey, setGeminiApiKey } = useQuizStore();
-  const { currentRoom, isHost } = useRoomStore();
-
-  const handleApiKeySave = () => {
-    if (apiKeyInput.trim()) {
-      setGeminiApiKey(apiKeyInput.trim());
-      setApiKeyInput('');
+  const canProceed = (step: TeacherStep): boolean => {
+    switch (step) {
+      case 'create': return true;
+      case 'edit': return quizSets.length > 0;
+      case 'lobby': return selectedQuizSet !== null;
+      case 'game': return currentRoom?.status === 'playing';
+      default: return false;
     }
   };
 
-  const tabs: { id: Tab; label: string; disabled?: boolean }[] = [
-    { id: 'upload', label: '퀴즈 생성' },
-    { id: 'edit', label: '퀴즈 편집', disabled: quizSets.length === 0 },
-    { id: 'lobby', label: '게임 로비', disabled: !currentQuizSet },
-    { id: 'game', label: '진행 중', disabled: !currentRoom || currentRoom.status !== 'playing' },
-  ];
+  const getStepStatus = (stepId: TeacherStep): 'completed' | 'active' | 'locked' => {
+    const stepOrder: TeacherStep[] = ['create', 'edit', 'lobby', 'game'];
+    const currentIndex = stepOrder.indexOf(currentStep);
+    const stepIndex = stepOrder.indexOf(stepId);
+    if (stepIndex < currentIndex) return 'completed';
+    if (stepIndex === currentIndex) return 'active';
+    return 'locked';
+  };
 
   return (
-    <div className="min-h-screen bg-pixel-dark">
-      {/* Header */}
-      <header className="bg-gray-900 border-b-4 border-pixel-purple p-4">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-pixel text-pixel-gold">
-              SURVIVOR QUIZ BRAWL
-            </h1>
-            <p className="text-gray-400 font-pixel text-xs mt-1">
-              교사 대시보드
-            </p>
-          </div>
+    <div style={{ padding: 'clamp(16px, 3vw, 40px)' }}>
 
-          {/* API Key Status */}
-          <div className="flex items-center gap-4">
-            {geminiApiKey ? (
-              <div className="flex items-center gap-2">
-                <span className="text-green-400 font-pixel text-xs">API Key 설정됨</span>
-                <button
-                  onClick={() => setGeminiApiKey('')}
-                  className="text-red-400 font-pixel text-xs hover:text-red-300"
-                >
-                  삭제
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <input
-                  type="password"
-                  value={apiKeyInput}
-                  onChange={(e) => setApiKeyInput(e.target.value)}
-                  placeholder="Gemini API Key"
-                  className="bg-gray-700 text-white font-pixel text-xs px-3 py-2 rounded border border-gray-600 w-48"
-                />
-                <PixelButton onClick={handleApiKeySave} size="sm" variant="success">
-                  저장
-                </PixelButton>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Tab Navigation */}
-      <nav className="bg-gray-800 border-b-2 border-gray-700">
-        <div className="max-w-6xl mx-auto flex">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => !tab.disabled && setActiveTab(tab.id)}
-              disabled={tab.disabled}
-              className={`
-                px-6 py-3 font-pixel text-sm transition-colors
-                ${activeTab === tab.id
-                  ? 'bg-pixel-purple text-white border-b-4 border-purple-400'
-                  : tab.disabled
-                    ? 'text-gray-600 cursor-not-allowed'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                }
-              `}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto p-6">
-        {activeTab === 'upload' && (
-          <FileUpload
-            onQuizGenerated={() => setActiveTab('edit')}
+      {/* API Key Section */}
+      <div className="pixel-card" style={{ padding: 'clamp(12px, 2vw, 24px)', marginBottom: 'clamp(16px, 2.5vw, 32px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(8px, 1vw, 16px)', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 'clamp(16px, 2vw, 24px)' }}>🔑</span>
+          <label className="font-pixel" style={{ fontSize: 'clamp(7px, 0.9vw, 11px)', color: '#b8b5c8' }}>
+            Gemini API Key:
+          </label>
+          <input
+            type="password"
+            className="pixel-input"
+            value={geminiApiKey}
+            onChange={(e) => setGeminiApiKey(e.target.value)}
+            placeholder="API 키를 입력하세요"
+            style={{ flex: 1, minWidth: '160px', fontSize: 'clamp(7px, 0.8vw, 10px)', padding: 'clamp(6px, 0.8vw, 12px) clamp(8px, 1vw, 16px)' }}
           />
-        )}
+          {geminiApiKey && (
+            <span className="pixel-badge" style={{ background: 'rgba(0,184,148,0.15)', color: '#55efc4', fontSize: 'clamp(6px, 0.7vw, 8px)' }}>
+              ✅ 설정됨
+            </span>
+          )}
+        </div>
+      </div>
 
-        {activeTab === 'edit' && (
-          <QuizEditor
-            onSelectForGame={(quizSet) => {
-              setCurrentQuizSet(quizSet);
-              setActiveTab('lobby');
+      {/* Step Navigation */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0',
+        marginBottom: 'clamp(20px, 3vw, 40px)',
+        flexWrap: 'wrap',
+      }}>
+        {STEPS.map((step, index) => {
+          const status = getStepStatus(step.id);
+          return (
+            <div key={step.id} style={{ display: 'flex', alignItems: 'center' }}>
+              <button
+                onClick={() => canProceed(step.id) && setCurrentStep(step.id)}
+                disabled={!canProceed(step.id) && status === 'locked'}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 'clamp(4px, 0.5vw, 8px)',
+                  padding: 'clamp(8px, 1vw, 16px)',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: status === 'locked' ? 'not-allowed' : 'pointer',
+                  opacity: status === 'locked' ? 0.4 : 1,
+                  transition: 'all 0.3s',
+                }}
+              >
+                <div style={{
+                  width: 'clamp(36px, 4vw, 56px)',
+                  height: 'clamp(36px, 4vw, 56px)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 'clamp(14px, 1.8vw, 22px)',
+                  fontFamily: "'Press Start 2P', monospace",
+                  background: status === 'completed'
+                    ? 'linear-gradient(135deg, #00b894, #55efc4)'
+                    : status === 'active'
+                      ? 'linear-gradient(135deg, #9b59b6, #e84393)'
+                      : 'rgba(255,255,255,0.06)',
+                  border: `2px solid ${status === 'completed' ? '#00b894' : status === 'active' ? '#9b59b6' : 'rgba(255,255,255,0.15)'}`,
+                  boxShadow: status === 'active' ? '0 0 20px rgba(155,89,182,0.4)' : 'none',
+                  color: status === 'locked' ? '#6c6783' : '#fff',
+                }}>
+                  {status === 'completed' ? '✓' : step.icon}
+                </div>
+                <span className="font-pixel" style={{
+                  fontSize: 'clamp(6px, 0.7vw, 9px)',
+                  color: status === 'active' ? '#fdcb6e' : status === 'completed' ? '#55efc4' : '#6c6783',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {step.label}
+                </span>
+              </button>
+              {index < STEPS.length - 1 && (
+                <div style={{
+                  width: 'clamp(24px, 4vw, 60px)',
+                  height: '3px',
+                  background: getStepStatus(STEPS[index + 1].id) !== 'locked'
+                    ? 'linear-gradient(90deg, #9b59b6, #e84393)'
+                    : 'rgba(255,255,255,0.1)',
+                  borderRadius: '2px',
+                  transition: 'background 0.3s',
+                }} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Step Content */}
+      <div style={{ animation: 'slide-up 0.4s ease-out' }}>
+        {currentStep === 'create' && (
+          <FileUpload
+            apiKey={geminiApiKey}
+            onQuizGenerated={(qs) => {
+              setSelectedQuizSet(qs);
+              setCurrentStep('edit');
             }}
           />
         )}
 
-        {activeTab === 'lobby' && currentQuizSet && (
-          <QRLobby
-            quizSet={currentQuizSet}
-            onGameStart={() => setActiveTab('game')}
+        {currentStep === 'edit' && (
+          <QuizEditor
+            quizSets={quizSets}
+            selectedQuizSet={selectedQuizSet}
+            onSelectQuizSet={setSelectedQuizSet}
+            onStartGame={(qs) => {
+              setSelectedQuizSet(qs);
+              setCurrentStep('lobby');
+            }}
           />
         )}
 
-        {activeTab === 'game' && currentRoom && (
-          <Leaderboard />
+        {currentStep === 'lobby' && selectedQuizSet && (
+          <QRLobby
+            quizSet={selectedQuizSet}
+            onGameStart={() => setCurrentStep('game')}
+          />
         )}
-      </main>
+
+        {currentStep === 'game' && <Leaderboard />}
+      </div>
     </div>
   );
 }

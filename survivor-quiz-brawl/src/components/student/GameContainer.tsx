@@ -63,11 +63,11 @@ export function GameContainer({ playerName, onGameOver }: GameContainerProps) {
     }
   }, [levelUpData]);
 
-  const handleQuizAnswer = (selectedIndex: number, timeSpent: number) => {
-    const correct = submitAnswer(selectedIndex, timeSpent);
+  const handleQuizAnswer = (selectedIndex: number, isCorrect: boolean) => {
+    submitAnswer(selectedIndex, 0);
     setShowQuiz(false);
 
-    if (correct) {
+    if (isCorrect) {
       // Bonus: show all upgrades
     }
 
@@ -93,17 +93,7 @@ export function GameContainer({ playerName, onGameOver }: GameContainerProps) {
 
       {/* HUD Overlay */}
       {isReady && playerState && (
-        <GameHUD
-          hp={playerState.hp}
-          maxHp={playerState.maxHp}
-          level={playerState.level}
-          xp={playerState.xp}
-          xpToNext={playerState.xpToNext}
-          score={playerState.score}
-          survivalTime={playerState.survivalTime}
-          wave={playerState.wave}
-          playerName={playerName}
-        />
+        <GameHUD />
       )}
 
       {/* Mobile Controls */}
@@ -123,8 +113,7 @@ export function GameContainer({ playerName, onGameOver }: GameContainerProps) {
       {/* Upgrade Selection */}
       {levelUpData && !showQuiz && (
         <UpgradeSelect
-          level={levelUpData.level}
-          upgrades={levelUpData.upgrades}
+          upgrades={levelUpData.upgrades.map((u: any) => ({ ...u, name: u.nameKo || u.name, description: u.descriptionKo || u.description, icon: u.icon || '⚡' }))}
           onSelect={handleUpgradeSelect}
         />
       )}

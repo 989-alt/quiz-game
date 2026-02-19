@@ -3,44 +3,44 @@ import React from 'react';
 interface PixelButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
-  variant?: 'primary' | 'secondary' | 'danger' | 'success';
-  size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning';
+  size?: 'sm' | 'md' | 'lg';
   className?: string;
-  type?: 'button' | 'submit' | 'reset';
+  icon?: string;
 }
 
 export function PixelButton({
   children,
   onClick,
+  disabled = false,
   variant = 'primary',
   size = 'md',
-  disabled = false,
   className = '',
-  type = 'button',
+  icon,
 }: PixelButtonProps) {
-  const baseStyles = 'font-pixel transition-all duration-150 border-b-4 active:border-b-0 active:mt-1 disabled:opacity-50 disabled:cursor-not-allowed';
-
-  const variantStyles = {
-    primary: 'bg-pixel-blue text-white border-blue-700 hover:bg-blue-500',
-    secondary: 'bg-pixel-purple text-white border-purple-900 hover:bg-purple-700',
-    danger: 'bg-pixel-red text-white border-red-800 hover:bg-red-500',
-    success: 'bg-pixel-green text-black border-green-700 hover:bg-green-400',
+  const variantMap: Record<string, string> = {
+    primary: 'btn-purple',
+    secondary: 'btn-blue',
+    success: 'btn-green',
+    danger: 'btn-red',
+    warning: 'btn-orange',
   };
 
-  const sizeStyles = {
-    sm: 'px-3 py-1 text-xs',
-    md: 'px-6 py-2 text-sm',
-    lg: 'px-8 py-3 text-base',
+  const sizeStyles: Record<string, React.CSSProperties> = {
+    sm: { padding: 'clamp(4px, 0.5vw, 8px) clamp(8px, 1vw, 16px)', fontSize: 'clamp(6px, 0.65vw, 8px)' },
+    md: { padding: 'clamp(8px, 1vw, 14px) clamp(14px, 1.8vw, 24px)', fontSize: 'clamp(7px, 0.8vw, 10px)' },
+    lg: { padding: 'clamp(10px, 1.3vw, 18px) clamp(18px, 2.2vw, 32px)', fontSize: 'clamp(8px, 1vw, 13px)' },
   };
 
   return (
     <button
-      type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      className={`btn-pixel ${variantMap[variant]} ${className}`}
+      style={sizeStyles[size]}
     >
+      {icon && <span style={{ marginRight: 'clamp(4px, 0.4vw, 6px)' }}>{icon}</span>}
       {children}
     </button>
   );

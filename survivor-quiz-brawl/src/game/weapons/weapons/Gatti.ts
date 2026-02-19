@@ -104,18 +104,4 @@ export class Gatti extends WeaponBase {
       }
     });
   }
-
-  private findRandomEnemyInRange(range: number): Phaser.Physics.Arcade.Sprite | null {
-    const monsters = this.scene.getMonsters();
-    const inRange: Phaser.Physics.Arcade.Sprite[] = [];
-
-    monsters.getChildren().forEach((m) => {
-      const monster = m as Phaser.Physics.Arcade.Sprite;
-      if (!monster.active) return;
-      const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, monster.x, monster.y);
-      if (dist <= range) inRange.push(monster);
-    });
-
-    return inRange.length > 0 ? inRange[Math.floor(Math.random() * inRange.length)] : null;
-  }
 }
