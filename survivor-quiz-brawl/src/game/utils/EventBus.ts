@@ -35,6 +35,7 @@ export const GameEvents = {
   // Game ready event
   GAME_READY: 'game-ready',
   GAME_START: 'game-start',
+  GAME_QUIT: 'game-quit',
 } as const;
 
 export type GameEventType = typeof GameEvents[keyof typeof GameEvents];

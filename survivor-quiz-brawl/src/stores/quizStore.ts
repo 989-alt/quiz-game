@@ -227,7 +227,9 @@ export const useQuizStore = create<QuizState>()(
         if (!currentQuizSet) return false;
 
         if (currentQuizIndex + 1 >= currentQuizSet.quizzes.length) {
-          return false;
+          // Loop back to start (shuffle if math quizzes for variety)
+          set({ currentQuizIndex: 0 });
+          return true;
         }
 
         set({ currentQuizIndex: currentQuizIndex + 1 });

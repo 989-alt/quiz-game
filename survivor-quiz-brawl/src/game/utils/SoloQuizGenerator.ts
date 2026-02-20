@@ -1,24 +1,34 @@
 
 import type { Quiz } from '../../types/quiz';
+import { getCurriculum, getMathTopics } from '../../data/curriculum';
 
 export class SoloQuizGenerator {
+    /**
+     * Generate a math quiz based on the grade-specific curriculum
+     */
     static generateMathQuiz(grade: number): Partial<Quiz> {
+        const curriculum = getCurriculum(grade);
+        const topics = getMathTopics(grade);
+
+        // Select a random topic from the curriculum
+        const topic = topics[Math.floor(Math.random() * topics.length)];
+
         switch (grade) {
-            case 1: // Add/Sub 1-digit
+            case 1: // Add/Sub 1-digit (curriculum: numbers_1_9, addition_basic, subtraction_basic)
                 return this.generateBasicMath(1, 9, ['+', '-']);
-            case 2: // Add/Sub 2-digit, Basic Mult
+            case 2: // Add/Sub 2-digit, Basic Mult (curriculum: addition_2digit, multiplication_intro)
                 return Math.random() < 0.7
                     ? this.generateBasicMath(10, 99, ['+', '-'])
                     : this.generateBasicMath(2, 9, ['*']);
-            case 3: // Mult/Div, 3-digit Add
+            case 3: // Mult/Div, 3-digit Add (curriculum: multiplication_full, division_basic)
                 return Math.random() < 0.5
                     ? this.generateBasicMath(2, 12, ['*', '/'])
                     : this.generateBasicMath(100, 999, ['+']);
-            case 4: // Mixed operations, larger numbers
+            case 4: // Mixed operations (curriculum: mixed_operations)
                 return this.generateMixedMath(10, 100);
-            case 5: // Simple Fractions/Decimals (Simulated), comparisons
+            case 5: // Decimals and comparisons (curriculum: decimals, decimal_comparison)
                 return this.generateComparison(grade);
-            case 6: // Complex logic/geometry hints
+            case 6: // Sequences and logic (curriculum: sequences, ratio)
                 return this.generateLogicMath();
             default:
                 return this.generateBasicMath(1, 10, ['+']);
@@ -71,7 +81,7 @@ export class SoloQuizGenerator {
 
         return {
             question,
-            choices: [answer.toString(), wrong.toString(), "같다", "알 수 없다"],
+            options: [answer.toString(), wrong.toString(), "같다", "알 수 없다"],
             correctIndex: 0
         };
     }

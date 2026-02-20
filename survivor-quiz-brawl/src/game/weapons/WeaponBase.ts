@@ -202,9 +202,9 @@ export abstract class WeaponBase {
       projectile.setRotation(Math.atan2(velocityY, velocityX));
     }
 
-    // Store pierce count
-    projectile.setData('pierce', this.getPierce());
-    projectile.setData('damage', this.getDamage());
+    // Store pierce count and damage - use direct properties for collision detection
+    (projectile as any).pierce = this.getPierce();
+    (projectile as any).damage = this.getDamage();
 
     // Auto destroy after duration
     const lifespan = options.lifespan ?? this.getDuration();

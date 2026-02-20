@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
-import { Monster, MonsterTypes } from '../entities/Monster';
+import { Monster, MonsterTypes, getMonsterConfigForWave, getBossConfigForWave, isBossWave } from '../entities/Monster';
 import { XPGem } from '../entities/XPGem';
 import { WeaponManager, WeaponInfoList } from '../weapons/WeaponManager';
 import { PassiveInfoList } from '../weapons/PassiveManager';
@@ -26,6 +26,7 @@ export class GameScene extends Phaser.Scene {
   private spawnTimer: number = 0;
   private waveTimer: number = 0;
   private stateUpdateTimer: number = 0;
+  private pendingLevelUp: boolean = false; // Track if level up is waiting for quiz
 
   private background!: Phaser.GameObjects.TileSprite;
 
@@ -72,7 +73,7 @@ export class GameScene extends Phaser.Scene {
 
     // Create weapon manager and give starting weapon
     this.weaponManager = new WeaponManager(this, this.player);
-    this.weaponManager.addWeapon('whip');
+    this.weaponManager.addWeapon('ruler'); // Start with ruler (자)
 
     // Setup collisions
     this.setupCollisions();
@@ -163,6 +164,8 @@ export class GameScene extends Phaser.Scene {
     if (!m.active) return;
 
     this.player.takeDamage(m.damage);
+    // Immediately emit state update so HUD reflects damage
+    this.emitPlayerState();
   }
 
   private handlePlayerGemCollision(
@@ -174,6 +177,8 @@ export class GameScene extends Phaser.Scene {
 
     const xp = g.collect();
     this.addXp(xp);
+    // Immediately emit state update so HUD reflects XP gain
+    this.emitPlayerState();
   }
 
   private handleProjectileMonsterCollision(
@@ -219,6 +224,17 @@ export class GameScene extends Phaser.Scene {
     EventBus.on(GameEvents.RESUME_GAME, this.resumeGame, this);
     EventBus.on(GameEvents.UPGRADE_SELECTED, this.handleUpgradeSelected, this);
     EventBus.on(GameEvents.QUIZ_RESULT, this.handleQuizResult, this);
+    EventBus.on(GameEvents.GAME_OVER, this.handleGameOver, this);
+  }
+
+  private handleGameOver(): void {
+    // Transition to GameOverScene with stats
+    this.scene.start('GameOverScene', {
+      score: this.score,
+      level: this.playerLevel,
+      survivalTime: this.survivalTime,
+      monstersKilled: this.monstersKilled,
+    });
   }
 
   private pauseGame(): void {
@@ -242,7 +258,22 @@ export class GameScene extends Phaser.Scene {
 
   private handleQuizResult(data: { correct: boolean }): void {
     if (data.correct) {
+      // Quiz correct: confirm the level up
       this.score += 100;
+      this.pendingLevelUp = false;
+    } else {
+      // Quiz wrong: cancel the level up, lose some XP
+      if (this.pendingLevelUp) {
+        this.playerLevel--; // Revert the level increment
+        // First recalculate XP requirement for current (lower) level
+        this.xpToNextLevel = Math.floor(
+          GAME_CONFIG.xp.baseToLevel * Math.pow(GAME_CONFIG.xp.multiplier, this.playerLevel - 1)
+        );
+        // Then set XP to 50% of the CURRENT level's requirement
+        this.playerXp = Math.floor(this.xpToNextLevel * 0.5);
+        this.pendingLevelUp = false;
+        this.emitPlayerState();
+      }
     }
   }
 
@@ -335,23 +366,8 @@ export class GameScene extends Phaser.Scene {
     const x = this.player.x + Math.cos(angle) * distance;
     const y = this.player.y + Math.sin(angle) * distance;
 
-    // Choose monster type based on wave
-    let monsterType = 'basic';
-    const roll = Math.random();
-
-    if (this.currentWave >= 10 && roll < 0.05) {
-      monsterType = 'boss';
-    } else if (this.currentWave >= 5 && roll < 0.2) {
-      monsterType = 'tank';
-    } else if (this.currentWave >= 3 && roll < 0.3) {
-      monsterType = 'fast';
-    }
-
-    const config = { ...MonsterTypes[monsterType] };
-
-    // Scale stats with wave
-    config.hp = Math.floor(config.hp * (1 + this.currentWave * 0.1));
-    config.damage = Math.floor(config.damage * (1 + this.currentWave * 0.05));
+    // Get monster config based on current wave
+    const config = getMonsterConfigForWave(this.currentWave);
 
     const monster = new Monster(this, x, y, config);
     monster.setTarget(this.player);
@@ -396,8 +412,8 @@ export class GameScene extends Phaser.Scene {
       this.currentWave++;
       this.waveTimer = 0;
 
-      // Spawn boss on certain waves
-      if (this.currentWave % 5 === 0) {
+      // Spawn boss every 3 waves
+      if (isBossWave(this.currentWave)) {
         this.spawnBossWave();
       }
     }
@@ -405,26 +421,25 @@ export class GameScene extends Phaser.Scene {
 
   private spawnBossWave(): void {
     // Boss wave spawning around player
-    const count = Math.floor(this.currentWave / 5);
+    // Number of bosses increases with wave (1 boss per 3 waves)
+    const bossCount = Math.max(1, Math.floor(this.currentWave / 6));
 
-    for (let i = 0; i < count; i++) {
-      this.time.delayedCall(i * 500, () => {
+    for (let i = 0; i < bossCount; i++) {
+      this.time.delayedCall(i * 800, () => {
         const angle = Math.random() * Math.PI * 2;
         const dist = 500;
         const x = this.player.x + Math.cos(angle) * dist;
         const y = this.player.y + Math.sin(angle) * dist;
 
-        const config = { ...MonsterTypes.boss };
-        config.hp = Math.floor(config.hp * (1 + this.currentWave * 0.2));
+        // Get boss config based on current wave
+        const config = getBossConfigForWave(this.currentWave);
 
-        const monster = new Monster(
-          this,
-          x,
-          y,
-          config
-        );
+        const monster = new Monster(this, x, y, config);
         monster.setTarget(this.player);
         this.monsters.add(monster);
+
+        // Boss spawn announcement effect
+        this.cameras.main.shake(300, 0.01);
       });
     }
   }
@@ -448,6 +463,7 @@ export class GameScene extends Phaser.Scene {
 
   private levelUp(): void {
     this.playerLevel++;
+    this.pendingLevelUp = true; // Mark level up as pending until quiz is answered
     this.xpToNextLevel = Math.floor(
       GAME_CONFIG.xp.baseToLevel * Math.pow(GAME_CONFIG.xp.multiplier, this.playerLevel - 1)
     );
@@ -538,5 +554,6 @@ export class GameScene extends Phaser.Scene {
     EventBus.off(GameEvents.RESUME_GAME, this.resumeGame, this);
     EventBus.off(GameEvents.UPGRADE_SELECTED, this.handleUpgradeSelected, this);
     EventBus.off(GameEvents.QUIZ_RESULT, this.handleQuizResult, this);
+    EventBus.off(GameEvents.GAME_OVER, this.handleGameOver, this);
   }
 }

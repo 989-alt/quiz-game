@@ -29,10 +29,19 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private joystickVector: Phaser.Math.Vector2 = new Phaser.Math.Vector2(0, 0);
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'player');
+    // Use actual player sprite
+    super(scene, x, y, 'player_idle');
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
+
+    // Scale down the sprite to fit game
+    this.setScale(0.1);
+
+    // Set explicit physics body size for reliable collision detection
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    body.setSize(this.displayWidth * 0.8, this.displayHeight * 0.8);
+    body.setOffset(this.width * 0.1, this.height * 0.1);
 
     this.setCollideWorldBounds(false);
     this.setDepth(10);

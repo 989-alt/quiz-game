@@ -18,41 +18,42 @@
 | monster_flying | 24x24 | Aerial enemy | ❌ Needed |
 | monster_ranged | 24x24 | Enemy that shoots | ❌ Needed |
 
-## ⚔️ Weapons (20 Total)
-| ID | Asset | Size | Description | Status |
-|----|-------|------|-------------|--------|
-| whip | weapon_whip | 80x24 | Horizontal slash effect | 🟡 Placeholder |
-| magic_wand | projectile_magic | 16x16 | Magic bolt | 🟡 Placeholder |
-| knife | projectile_knife | 16x4 | Throwing knife | 🟡 Placeholder |
-| axe | projectile_axe | 20x20 | Spinning axe | 🟡 Placeholder |
-| cross | projectile_cross | 24x24 | Boomerang cross | 🟡 Placeholder |
-| king_bible | area_bible | 24x24 | Orbiting book | 🟡 Placeholder |
-| fire_wand | projectile_fireball | 12x12 | Fireball | 🟡 Placeholder |
-| garlic | area_garlic | 64x64 | AOE circle | 🟡 Placeholder |
-| santa_water | area_santa_water | 48x48 | Water splash zone | 🟡 Placeholder |
-| runetracer | projectile_rune | 16x16 | Bouncing rune | ❌ Needed |
-| lightning | area_lightning | 16x48 | Lightning bolt | 🟡 Placeholder |
-| pentagram | effect_pentagram | 64x64 | Screen-clear effect | ❌ Needed |
-| peachone | companion_bird_white | 16x16 | White bird | ❌ Needed |
-| ebony_wings | companion_bird_black | 16x16 | Black bird | ❌ Needed |
-| phiera | projectile_beam | 200x8 | Crossing beams | ❌ Needed |
-| gatti | companion_cat | 16x16 | Cat companion | ❌ Needed |
-| song | effect_wave | 100x32 | Sound wave | ❌ Needed |
-| arrow | projectile_arrow | 20x4 | Arrow | 🟡 Placeholder |
-| bone | projectile_bone | 16x8 | Bouncing bone | 🟡 Placeholder |
-| cherry | projectile_cherry | 16x16 | Cherry bomb | ❌ Needed |
+## ⚔️ 무기 (20종) - 아이 친화적 학용품/자연 테마
 
-### 🍌 New Fun Weapons (To Add)
-| ID | Asset | Size | Description | Priority |
-|----|-------|------|-------------|----------|
-| banana | projectile_banana | 20x12 | Boomerang banana | High |
-| acorn | projectile_acorn | 12x12 | Bouncing acorns | High |
-| pencil | projectile_pencil | 16x4 | Sharp pencil throw | Medium |
-| eraser | projectile_eraser | 14x8 | Erasing projectile | Medium |
-| ruler | weapon_ruler | 60x8 | Slap attack | Medium |
-| book | projectile_book | 16x16 | Flying books | Medium |
-| calculator | weapon_calculator | 24x24 | Math attack AOE | Medium |
-| crayon | trail_crayon | varies | Rainbow trail damage | Low |
+### 투사체 무기 (Projectile)
+| ID | 에셋명 | 크기 | 설명 | 상태 |
+|----|--------|------|------|------|
+| banana | weapon_banana | 24x16 | 바나나 부메랑 (돌아옴) | ❌ 필요 |
+| acorn | weapon_acorn | 12x12 | 도토리 (튕김) | ❌ 필요 |
+| pencil | weapon_pencil | 20x6 | 연필 (빠른 직선) | ❌ 필요 |
+| paper_plane | weapon_paper_plane | 24x16 | 종이비행기 (유도) | ❌ 필요 |
+| marble | weapon_marble | 12x12 | 구슬 (벽 반사) | ❌ 필요 |
+| snowball | weapon_snowball | 16x16 | 눈덩이 (둔화) | ❌ 필요 |
+| leaf | weapon_leaf | 16x16 | 나뭇잎 (바람타고) | ❌ 필요 |
+
+### 근접/범위 무기 (Melee/Area)
+| ID | 에셋명 | 크기 | 설명 | 상태 |
+|----|--------|------|------|------|
+| ruler | weapon_ruler | 64x12 | 자 (휘두르기) | ❌ 필요 |
+| eraser | weapon_eraser | 48x48 | 지우개 (범위 소멸) | ❌ 필요 |
+| crayon | weapon_crayon | 48x16 | 크레파스 (무지개 선) | ❌ 필요 |
+| lunch_box | weapon_lunch_box | 40x40 | 도시락 (폭발 범위) | ❌ 필요 |
+| bubble | weapon_bubble | 32x32 | 비눗방울 (회전) | ❌ 필요 |
+| water_balloon | weapon_water_balloon | 24x24 | 물풍선 (스플래시) | ❌ 필요 |
+
+### 소환/동료 무기 (Companion)
+| ID | 에셋명 | 크기 | 설명 | 상태 |
+|----|--------|------|------|------|
+| hamster | weapon_hamster | 20x20 | 햄스터 친구 (회전) | ❌ 필요 |
+| butterfly | weapon_butterfly | 16x16 | 나비 (유도공격) | ❌ 필요 |
+| robot_toy | weapon_robot | 24x24 | 장난감 로봇 (자동) | ❌ 필요 |
+
+### 특수 무기 (Special)
+| ID | 에셋명 | 크기 | 설명 | 상태 |
+|----|--------|------|------|------|
+| rainbow | weapon_rainbow | 80x32 | 무지개 파동 | ❌ 필요 |
+| star | weapon_star | 24x24 | 별 (랜덤 타격) | ❌ 필요 |
+| magnet | weapon_magnet | 24x24 | 자석 (끌어당김) | ❌ 필요 |
 
 ## 💎 Collectibles
 | Asset | Size | Description | Status |

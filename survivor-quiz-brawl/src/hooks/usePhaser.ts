@@ -31,12 +31,13 @@ export interface LevelUpData {
   }>;
 }
 
-export function usePhaser(containerId: string, options?: { isSolo: boolean; playerName: string }) {
+export function usePhaser(containerId: string, options?: { isSolo: boolean; playerName: string; onQuit?: () => void }) {
   const gameRef = useRef<Phaser.Game | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [playerState, setPlayerState] = useState<PlayerStateData | null>(null);
   const [levelUpData, setLevelUpData] = useState<LevelUpData | null>(null);
   const [isGameOver, setIsGameOver] = useState(false);
+  const onQuitRef = useRef(options?.onQuit);
 
   // Memoize options to prevent unnecessary re-renders
   const isSolo = options?.isSolo ?? false;
@@ -67,16 +68,24 @@ export function usePhaser(containerId: string, options?: { isSolo: boolean; play
       setIsGameOver(true);
     };
 
+    const handleGameQuit = () => {
+      if (onQuitRef.current) {
+        onQuitRef.current();
+      }
+    };
+
     EventBus.on(GameEvents.GAME_READY, handleGameReady);
     EventBus.on(GameEvents.PLAYER_STATE_UPDATE, handlePlayerState);
     EventBus.on(GameEvents.LEVEL_UP, handleLevelUp);
     EventBus.on(GameEvents.GAME_OVER, handleGameOver);
+    EventBus.on(GameEvents.GAME_QUIT, handleGameQuit);
 
     return () => {
       EventBus.off(GameEvents.GAME_READY, handleGameReady);
       EventBus.off(GameEvents.PLAYER_STATE_UPDATE, handlePlayerState);
       EventBus.off(GameEvents.LEVEL_UP, handleLevelUp);
       EventBus.off(GameEvents.GAME_OVER, handleGameOver);
+      EventBus.off(GameEvents.GAME_QUIT, handleGameQuit);
 
       if (gameRef.current) {
         gameRef.current.destroy(true);

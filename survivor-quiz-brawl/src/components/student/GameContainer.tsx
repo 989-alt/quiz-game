@@ -63,19 +63,21 @@ export function GameContainer({ playerName, soloConfig, onExit, onGameOver }: Ga
     }
   }, [isGameOver, playerState, onGameOver]);
 
-  // Handle level up - check if we should show quiz
+  // Handle level up - always show quiz (quiz must be correct to level up)
   useEffect(() => {
     if (levelUpData) {
       const quiz = getCurrentQuiz();
-      // Show quiz every 3 levels
-      if (quiz && playerState && playerState.level % 3 === 0) {
+      // Always show quiz on level up - must answer correctly to level up
+      if (quiz) {
         setShowQuiz(true);
         setQuizAnsweredCorrectly(null);
         pauseGame();
       } else {
-        // No quiz, show all upgrades
+        // No quiz available (ran out of questions), auto-pass and show all upgrades
         setFilteredUpgrades(levelUpData.upgrades);
-        setQuizAnsweredCorrectly(null);
+        setQuizAnsweredCorrectly(true); // Treat as correct when no quiz
+        // Confirm the level up since there's no quiz to fail
+        EventBus.emit(GameEvents.QUIZ_RESULT, { correct: true });
       }
     }
   }, [levelUpData]);
@@ -88,14 +90,17 @@ export function GameContainer({ playerName, soloConfig, onExit, onGameOver }: Ga
 
     if (levelUpData) {
       if (isCorrect) {
-        // Correct: Get all 3 upgrade choices + bonus score
+        // Correct: Level up confirmed, get all 3 upgrade choices + bonus score
         setFilteredUpgrades(levelUpData.upgrades);
         EventBus.emit(GameEvents.QUIZ_RESULT, { correct: true });
       } else {
-        // Wrong: Only get 1 random upgrade choice (penalty)
-        const randomUpgrade = levelUpData.upgrades[Math.floor(Math.random() * levelUpData.upgrades.length)];
-        setFilteredUpgrades([randomUpgrade]);
+        // Wrong: Level up canceled, resume game without upgrades
+        setFilteredUpgrades([]); // No upgrades shown
         EventBus.emit(GameEvents.QUIZ_RESULT, { correct: false });
+        // Resume game after a short delay to show feedback
+        setTimeout(() => {
+          resumeGame();
+        }, 500);
       }
     }
   };
