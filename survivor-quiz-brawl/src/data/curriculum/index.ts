@@ -15,7 +15,7 @@ import { GRADE_6_CURRICULUM } from './grade6';
 
 export type GradeCurriculum = typeof GRADE_1_CURRICULUM;
 
-export const CURRICULUM_BY_GRADE: Record<number, GradeCurriculum> = {
+export const CURRICULUM_BY_GRADE: Record<number, any> = {
   1: GRADE_1_CURRICULUM,
   2: GRADE_2_CURRICULUM,
   3: GRADE_3_CURRICULUM,
@@ -27,7 +27,7 @@ export const CURRICULUM_BY_GRADE: Record<number, GradeCurriculum> = {
 /**
  * Get curriculum for a specific grade
  */
-export function getCurriculum(grade: number): GradeCurriculum | null {
+export function getCurriculum(grade: number): any | null {
   return CURRICULUM_BY_GRADE[grade] || null;
 }
 

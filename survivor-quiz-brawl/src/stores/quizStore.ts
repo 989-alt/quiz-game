@@ -92,7 +92,7 @@ export const useQuizStore = create<QuizState>()(
           id: `solo-${Date.now()}`,
           title: `솔로 플레이: ${topic === 'math' ? `수학 (${grade}학년)` : topic === 'spelling' ? '맞춤법' : '속담'}`,
           quizzes,
-          createdAt: new Date().toISOString(),
+          createdAt: Date.now(),
         };
 
         set({ currentQuizSet: soloSet, currentQuizIndex: 0, quizResults: [] });
