@@ -37,11 +37,13 @@ export class Monster extends Phaser.Physics.Arcade.Sprite {
       this.setScale(config.scale);
     }
 
-    // Set explicit physics body size for reliable collision detection
+    // Set physics body size to match full sprite size with proper centering
     const body = this.body as Phaser.Physics.Arcade.Body;
-    const size = this.displayWidth * 0.8;
-    body.setSize(size, size);
-    body.setOffset((this.displayWidth - size) / 2, (this.displayHeight - size) / 2);
+    const bodyWidth = this.width;
+    const bodyHeight = this.height;
+    body.setSize(bodyWidth, bodyHeight);
+    // Center the physics body on the sprite
+    body.setOffset(0, 0);
 
     this.setDepth(5);
 

@@ -38,10 +38,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     // Scale down the sprite to fit game
     this.setScale(0.1);
 
-    // Set explicit physics body size for reliable collision detection
+    // Set physics body size to match full sprite size with proper centering
     const body = this.body as Phaser.Physics.Arcade.Body;
-    body.setSize(this.displayWidth * 0.8, this.displayHeight * 0.8);
-    body.setOffset(this.width * 0.1, this.height * 0.1);
+    const bodyWidth = this.width;
+    const bodyHeight = this.height;
+    body.setSize(bodyWidth, bodyHeight);
+    // Center the physics body on the sprite
+    body.setOffset(0, 0);
 
     this.setCollideWorldBounds(false);
     this.setDepth(10);

@@ -1,34 +1,35 @@
+import Phaser from 'phaser';
 import { WeaponBase } from '../WeaponBase';
 import type { GameScene } from '../../scenes/GameScene';
 import type { Player } from '../../entities/Player';
 
 export class Ruler extends WeaponBase {
   id = 'ruler';
-  name = 'Ruler';
-  nameKo = '자';
-  description = 'Horizontal swing attack';
-  descriptionKo = '수평으로 휘두르는 자';
+  name = 'Banana Shooter';
+  nameKo = '바나나 발사기';
+  description = 'Shoots bananas in random directions';
+  descriptionKo = '랜덤한 방향으로 바나나를 발사합니다';
   maxLevel = 8;
 
   constructor(scene: GameScene, player: Player) {
     super(scene, player);
     this.baseStats = {
       damage: 20,
-      cooldown: 1100,
+      cooldown: 800,
       area: 1,
-      speed: 0,
-      duration: 300,
+      speed: 400,
+      duration: 2000,
       amount: 1,
-      pierce: 999,
+      pierce: 3,
       knockback: 0,
     };
     this.levelUpgrades = [
       { damage: 5 },
-      { area: 0.1 },
-      { damage: 5 },
       { amount: 1 },
       { damage: 5 },
-      { area: 0.1 },
+      { speed: 50 },
+      { damage: 5 },
+      { amount: 1 },
       { damage: 10 },
     ];
   }
@@ -36,67 +37,91 @@ export class Ruler extends WeaponBase {
   attack(): void {
     const amount = this.getAmount();
     const damage = this.getDamage();
+    const speed = this.getSpeed();
     const area = this.getArea();
-    const duration = this.getDuration();
+
+    // Find nearby enemies and shoot towards them
+    const enemies = this.findNearestEnemies(amount, 500);
 
     for (let i = 0; i < amount; i++) {
-      const direction = i % 2 === 0 ? 1 : -1;
-      const offsetY = (i - Math.floor(amount / 2)) * 30;
+      let angle: number;
 
-      this.createRulerAttack(direction, offsetY, damage, area, duration);
+      if (enemies[i]) {
+        // Shoot towards enemy with slight random spread
+        angle = Phaser.Math.Angle.Between(
+          this.player.x, this.player.y,
+          enemies[i].x, enemies[i].y
+        ) + (Math.random() - 0.5) * 0.3; // Small spread
+      } else {
+        // No enemy found, shoot in random direction
+        angle = Math.random() * Math.PI * 2;
+      }
+
+      this.createBananaProjectile(angle, damage, speed, area);
     }
   }
 
-  private createRulerAttack(direction: number, offsetY: number, damage: number, area: number, duration: number): void {
-    // Use actual sprite
-    const ruler = this.scene.add.sprite(
-      this.player.x + direction * 50 * area,
-      this.player.y + offsetY,
-      'weapon_ruler'
+  private findNearestEnemies(count: number, range: number): Phaser.Physics.Arcade.Sprite[] {
+    const monsters = this.scene.getMonsters().getChildren() as Phaser.Physics.Arcade.Sprite[];
+    const playerX = this.player.x;
+    const playerY = this.player.y;
+
+    // Filter and sort by distance
+    const nearby = monsters
+      .filter(m => m.active)
+      .map(m => ({
+        monster: m,
+        dist: Phaser.Math.Distance.Between(playerX, playerY, m.x, m.y)
+      }))
+      .filter(m => m.dist <= range)
+      .sort((a, b) => a.dist - b.dist)
+      .slice(0, count)
+      .map(m => m.monster);
+
+    return nearby;
+  }
+
+  private createBananaProjectile(angle: number, damage: number, speed: number, area: number): void {
+    // Use banana sprite
+    const banana = this.scene.add.sprite(
+      this.player.x,
+      this.player.y,
+      'weapon_banana'
     );
-    ruler.setScale(0.08 * area);
-    ruler.setDepth(9);
-    ruler.setRotation(direction > 0 ? 0 : Math.PI);
+    banana.setScale(0.08 * area); // Larger banana
+    banana.setDepth(9);
+    banana.setRotation(angle);
 
-    this.scene.physics.add.existing(ruler);
-    const body = ruler.body as Phaser.Physics.Arcade.Body;
-    body.setSize(ruler.displayWidth * 0.9, ruler.displayHeight * 0.9);
+    this.scene.physics.add.existing(banana);
+    const body = banana.body as Phaser.Physics.Arcade.Body;
+    // Use full sprite size for hitbox
+    body.setSize(banana.width, banana.height);
+    body.setOffset(0, 0);
 
-    (ruler as any).damage = damage;
-    (ruler as any).pierce = 999;
+    (banana as any).damage = damage;
+    (banana as any).pierce = this.getPierce();
 
-    this.scene.addProjectile(ruler as any);
+    this.scene.addProjectile(banana as any);
 
-    // Swing animation with physics body update
-    let elapsed = 0;
-    const startX = this.player.x;
-    const startAngle = direction > 0 ? -0.5 : Math.PI + 0.5;
-    const endAngle = direction > 0 ? 0.5 : Math.PI - 0.5;
+    // Set velocity for straight line movement
+    const velocityX = Math.cos(angle) * speed;
+    const velocityY = Math.sin(angle) * speed;
+    body.setVelocity(velocityX, velocityY);
 
-    const updateSwing = () => {
-      if (!ruler.active) return;
-
-      elapsed += this.scene.game.loop.delta;
-      const t = elapsed / duration;
-
-      if (t >= 1) {
-        ruler.destroy();
-        return;
-      }
-
-      // Swing motion
-      const swingT = Math.sin(t * Math.PI); // Peak at middle
-      ruler.x = this.player.x + direction * (40 + swingT * 20) * area;
-      ruler.y = this.player.y + offsetY;
-      ruler.rotation = startAngle + (endAngle - startAngle) * t;
-      ruler.alpha = 1 - t * 0.5;
-
-      // Update physics body
-      body.updateFromGameObject();
-
-      this.scene.time.delayedCall(16, updateSwing);
+    // Rotate while flying
+    const rotationSpeed = 0.15;
+    const updateRotation = () => {
+      if (!banana.active) return;
+      banana.rotation += rotationSpeed;
+      this.scene.time.delayedCall(16, updateRotation);
     };
+    updateRotation();
 
-    updateSwing();
+    // Destroy after duration
+    this.scene.time.delayedCall(this.getDuration(), () => {
+      if (banana.active) {
+        banana.destroy();
+      }
+    });
   }
 }

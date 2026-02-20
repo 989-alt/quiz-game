@@ -163,8 +163,8 @@ export class GameScene extends Phaser.Scene {
     const m = monster as Monster;
     if (!m.active) return;
 
-    this.player.takeDamage(m.damage);
-    // Immediately emit state update so HUD reflects damage
+    // No damage on touch - player only takes damage from other sources
+    // Just emit state update for any potential UI changes
     this.emitPlayerState();
   }
 

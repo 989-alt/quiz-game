@@ -56,10 +56,10 @@ export class XPGem extends Phaser.Physics.Arcade.Sprite {
     // Set scale for actual sprite
     this.setScale(config.scale);
 
-    // Set explicit physics body size for reliable collision detection
+    // Set physics body size to match full sprite for reliable collection
     const body = this.body as Phaser.Physics.Arcade.Body;
-    body.setSize(this.displayWidth * 0.8, this.displayHeight * 0.8);
-    body.setOffset(this.width * 0.1, this.height * 0.1);
+    body.setSize(this.width, this.height);
+    body.setOffset(0, 0);
 
     this.setDepth(2);
 
